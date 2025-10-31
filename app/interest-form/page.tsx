@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { normalizePhoneNumber } from "@/lib/phone";
 import { toast } from "sonner";
+import { PrivacyPolicyModal } from "@/components/privacy-policy-modal";
 
 // RFC 5322 email regex pattern
 const emailRegex =
@@ -438,9 +439,13 @@ export default function InterestFormPage() {
         {/* Footer Note */}
         <p className="text-center text-sm text-gray-500 mt-8">
           By submitting this form, you agree to our{" "}
-          <Link href="#" className="text-[#FF7A29] hover:underline">
-            privacy policy
-          </Link>
+          <PrivacyPolicyModal
+            trigger={
+              <button className="text-[#FF7A29] hover:underline cursor-pointer">
+                privacy policy
+              </button>
+            }
+          />
           .
         </p>
       </div>

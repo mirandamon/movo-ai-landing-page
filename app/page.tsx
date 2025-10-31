@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { PrivacyPolicyModal } from "@/components/privacy-policy-modal"
 
 export default function Home() {
   const statsRef = useRef<HTMLDivElement>(null)
@@ -430,6 +431,7 @@ Movo turns missed calls into paid enrollments - instantly, in your voice.       
                 <a href="/portal" className="text-sm text-[#333333] hover:text-[#FF7A29] transition-colors">
                   Portal
                 </a>
+                <PrivacyPolicyModal />
                 <div className="text-sm text-[#333333] text-center md:text-right">
                   © {new Date().getFullYear()} Movo AI. All rights reserved.
                 </div>
