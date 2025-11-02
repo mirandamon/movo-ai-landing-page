@@ -1,6 +1,6 @@
 # Movo AI Landing Page
 
-A modern landing page for Movo AI, built with Next.js 15, React 19, TypeScript, and Tailwind CSS.
+A modern landing page for Movo AI, a best-in-class AI operating system for sports academies, built with Next.js 15, React 19, TypeScript, and Tailwind CSS.
 
 ## Getting Started
 
