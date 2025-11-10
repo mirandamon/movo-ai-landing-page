@@ -21,9 +21,7 @@ export default function Home() {
   const [isHeroAudioPlaying, setIsHeroAudioPlaying] = useState(false)
   const [isLearnVideoPlaying, setIsLearnVideoPlaying] = useState(false)
   const learnVideoRef = useRef<HTMLAudioElement>(null)
-  // </CHANGE>
   const heroAudioRef = useRef<HTMLAudioElement>(null)
-  // </CHANGE>
   const [audioProgress, setAudioProgress] = useState(0)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -160,7 +158,6 @@ export default function Home() {
   const [counts, setCounts] = useState({ response: 0, conversion: 0, revenue: 0 })
   const [statsVisible, setStatsVisible] = useState(false)
   const statsRef = useRef<HTMLDivElement>(null)
-  // </CHANGE>
 
   const handleHeroAudioPlay = () => {
     if (heroAudioRef.current) {
@@ -194,7 +191,6 @@ export default function Home() {
     audio.addEventListener("ended", handleEnded)
     return () => audio.removeEventListener("ended", handleEnded)
   }, [])
-  // </CHANGE>
 
   const handleLearnVideoPlay = () => {
     if (learnVideoRef.current) {
@@ -228,7 +224,6 @@ export default function Home() {
     audio.addEventListener("ended", handleEnded)
     return () => audio.removeEventListener("ended", handleEnded)
   }, [])
-  // </CHANGE>
 
   const handlePlayAudio = () => {
     if (audioRef.current) {
@@ -381,7 +376,6 @@ export default function Home() {
 
     return () => observer.disconnect()
   }, [isRevenueVisible])
-  // </CHANGE>
 
   useEffect(() => {
     const observerOptions = {
@@ -440,7 +434,6 @@ export default function Home() {
 
     return () => observer.disconnect()
   }, [statsVisible])
-  // </CHANGE>
 
   return (
     <>
@@ -460,28 +453,29 @@ export default function Home() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 md:px-8 lg:px-16 py-32 md:py-20 text-center">
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-normal leading-tight text-white mb-6 max-w-5xl animate-fade-in-up">
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-normal leading-tight text-white mb-6 max-w-5xl">
             The fastest-selling teammate your academy will ever have
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-3xl leading-relaxed animate-fade-in-up animation-delay-150 px-4">
+          <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-3xl leading-relaxed px-4">
             Movo talks to every parent, fills your classes, and grows your revenue - automatically.
           </p>
-          {/* </CHANGE> */}
 
-          <div className="flex flex-col w-full sm:w-auto sm:flex-row gap-3 sm:gap-4 justify-center animate-fade-in-up animation-delay-300 px-4">
-            <button
-              onClick={() => setShowCallMe(true)}
-              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-[#D97948] hover:bg-[#C96838] text-white text-sm sm:text-base font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto"
+          <div className="flex flex-col w-full sm:w-auto sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+            <a
+              href="https://calendly.com/ari-movoai/30min"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-[#D97948] hover:bg-[#C96838] text-white text-sm sm:text-base font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto cursor-pointer min-h-[48px]"
             >
               <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
-              Call Movo
-            </button>
+              Book a demo
+            </a>
             <button
               onClick={handleHeroAudioPlay}
-              className="group flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white/10 hover:bg-white/20 text-white text-sm sm:text-base font-medium rounded-sm transition-all duration-300 border border-white/20 backdrop-blur-sm hover:shadow-2xl hover:scale-105 w-full sm:w-auto"
+              className="group flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white/10 hover:bg-white/20 text-white text-sm sm:text-base font-medium rounded-sm transition-all duration-300 border border-white/20 backdrop-blur-sm hover:shadow-2xl hover:scale-105 w-full sm:w-auto cursor-pointer min-h-[48px] min-w-[240px]"
             >
-              <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+              <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
                 {/* Animated waveform dots */}
                 {isHeroAudioPlaying ? (
                   <div className="flex items-center gap-1">
@@ -506,7 +500,7 @@ export default function Home() {
                   <Play className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </div>
-              <span className="font-medium">{isHeroAudioPlaying ? "Pause" : "Hear how Movo sells"}</span>
+              <span className="font-medium whitespace-nowrap">Hear how Movo sells</span>
             </button>
 
             <audio
@@ -514,10 +508,9 @@ export default function Home() {
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Mono%20Audio%20File%20%281%29-Ky1VPeJmOkmuanheihF0JpGzdJSFY3.wav"
               className="hidden"
             />
-            {/* </CHANGE> */}
           </div>
 
-          <div className="absolute bottom-12 sm:bottom-16 left-0 right-0 px-6 sm:px-8 animate-fade-in animation-delay-450">
+          <div className="absolute bottom-12 sm:bottom-16 left-0 right-0 px-6 sm:px-8">
             <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-6 uppercase tracking-widest font-medium">
               Trusted by leading sports academies
             </p>
@@ -534,12 +527,11 @@ export default function Home() {
               )}
             </div>
           </div>
-          {/* </CHANGE> */}
         </div>
       </section>
       <button
         onClick={() => setShowCallMe(true)}
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white text-gray-900 font-semibold rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 group"
+        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white text-gray-900 font-semibold rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 group cursor-pointer"
       >
         <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
           <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -548,40 +540,34 @@ export default function Home() {
         </div>
         <span className="text-sm sm:text-base">Talk to Movo</span>
       </button>
-      {/* </CHANGE> */}
-      <section id="product" className="min-h-screen flex items-center fade-on-scroll">
+      <section id="product" className="min-h-screen flex items-center">
         <div className="w-full grid lg:grid-cols-2">
           {/* Left side - White background with content */}
           <div className="bg-white px-8 md:px-16 lg:px-20 py-20 flex items-center">
             <div className="max-w-xl">
-              <div className="text-xs font-semibold tracking-widest text-gray-500 mb-8 animate-fade-in">
-                BUILT FOR SPORTS ACADEMIES
-              </div>
+              <div className="text-xs font-semibold tracking-widest text-gray-500 mb-8">BUILT FOR SPORTS ACADEMIES</div>
 
               <div
                 ref={revenueTargetRef}
-                className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full shadow-sm animate-fade-in"
+                className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full shadow-sm"
               >
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-semibold text-green-700">
-                  +${weeklyRevenue.toLocaleString()} in new trials this week
-                </span>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-semibold text-green-700">+$4,840 in new trials this week</span>
               </div>
-              {/* </CHANGE> */}
 
-              <h2 className="text-5xl md:text-6xl lg:text-7xl font-serif leading-tight text-gray-900 mb-8 animate-fade-in-up">
+              <h2 className="text-5xl md:text-6xl lg:text-7xl font-serif leading-tight text-gray-900 mb-8">
                 AI that learns your academy
                 <span className="block text-gray-400 italic">inside out.</span>
               </h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-10 animate-fade-in-up animation-delay-150">
+              <p className="text-lg text-gray-600 leading-relaxed mb-10">
                 Trains on your programs, prices, and families - then sells for you.
               </p>
 
               <button
                 onClick={handleLearnVideoPlay}
-                className="group flex items-center gap-3 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-base font-medium rounded-sm transition-all duration-300 mb-16 animate-fade-in-up animation-delay-300 hover:shadow-2xl hover:scale-105"
+                className="group flex items-center gap-3 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-base font-medium rounded-sm transition-all duration-300 mb-16 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px] min-w-[320px]"
               >
-                <div className="relative w-10 h-10 flex items-center justify-center">
+                <div className="relative w-10 h-10 flex items-center justify-center flex-shrink-0">
                   {isLearnVideoPlaying ? (
                     <div className="flex items-center gap-1">
                       <div
@@ -605,18 +591,17 @@ export default function Home() {
                     <Play className="w-5 h-5" />
                   )}
                 </div>
-                <span className="font-medium">{isLearnVideoPlaying ? "Pause" : "See Movo learn in action"}</span>
+                <span className="font-medium whitespace-nowrap">See Movo learn in action</span>
               </button>
               <audio
                 ref={learnVideoRef}
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Mono%20Audio%20File%20%281%29-Ky1VPeJmOkmuanheihF0JpGzdJSFY3.wav"
                 className="hidden"
               />
-              {/* </CHANGE> */}
 
               {/* Numbered features */}
               <div className="space-y-8 border-t border-gray-200 pt-12">
-                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500 animate-fade-in-up animation-delay-150">
+                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500">
                   <div className="text-3xl font-bold text-gray-900 flex-shrink-0 group-hover:text-[#D97948] transition-colors duration-300">
                     01
                   </div>
@@ -627,7 +612,7 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500 animate-fade-in-up animation-delay-300">
+                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500">
                   <div className="text-3xl font-bold text-gray-900 flex-shrink-0 group-hover:text-[#D97948] transition-colors duration-300">
                     02
                   </div>
@@ -639,7 +624,7 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500 animate-fade-in-up animation-delay-450">
+                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500">
                   <div className="text-3xl font-bold text-gray-900 flex-shrink-0 group-hover:text-[#D97948] transition-colors duration-300">
                     03
                   </div>
@@ -666,7 +651,7 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-blue-50/40 to-white/50" />
 
-            <div className="relative z-10 w-full max-w-2xl animate-scale-in">
+            <div className="relative z-10 w-full max-w-2xl">
               {/* Premium Dashboard Interface - Compact Frame */}
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200/50 backdrop-blur-sm hover:shadow-3xl transition-shadow duration-500">
                 {/* Dashboard Header */}
@@ -696,7 +681,7 @@ export default function Home() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4">
                       <div className="text-xs font-medium text-purple-600 mb-1">This Week</div>
-                      <div className="text-2xl font-bold text-purple-900">$2,840</div>
+                      <div className="text-2xl font-bold text-purple-900">$7,840</div>
                       <div className="text-xs text-purple-600 mt-1">↑ 23% from last week</div>
                     </div>
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4">
@@ -727,7 +712,6 @@ export default function Home() {
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">Emma's family booked trial</p>
-                              <p className="text-xs text-gray-600 mt-0.5">Goldfish Swim • Tuesday 4PM</p>
                             </div>
                             <span className="text-xs font-semibold text-green-600 flex-shrink-0">+$160</span>
                           </div>
@@ -743,7 +727,6 @@ export default function Home() {
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">Mike's mom asked about pricing</p>
-                              <p className="text-xs text-gray-600 mt-0.5">Answered in 2.1s • Follow-up scheduled</p>
                             </div>
                             <span className="text-xs text-blue-600 flex-shrink-0">2m ago</span>
                           </div>
@@ -759,7 +742,6 @@ export default function Home() {
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">Re-engaged Sarah Martinez</p>
-                              <p className="text-xs text-gray-600 mt-0.5">Inactive 14 days → Trial confirmed Friday</p>
                             </div>
                             <span className="text-xs text-purple-600 flex-shrink-0">5m ago</span>
                           </div>
@@ -794,16 +776,12 @@ export default function Home() {
               </div>
 
               {/* Caption below dashboard */}
-              <div className="text-center mt-8 animate-fade-in animation-delay-300">
-                <p className="text-lg font-semibold text-gray-900 bg-white/95 backdrop-blur-lg rounded-full px-8 py-3 shadow-lg inline-block border border-gray-200">
-                  Movo learns your academy inside out.
-                </p>
-              </div>
+              <div className="text-center mt-8"></div>
             </div>
           </div>
         </div>
       </section>
-      <section id="solution" className="py-32 bg-gradient-to-b from-blue-50 to-white fade-on-scroll">
+      <section id="solution" className="py-32 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-[1400px] mx-auto px-8 md:px-16">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-7xl font-serif text-gray-900 mb-6 leading-tight">
@@ -848,7 +826,8 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Never Miss a Call</h3>
                 <p className="text-gray-600 leading-relaxed mb-3">
-                  Every parent gets answered instantly - even after hours. Movo never lets an opportunity go to voicemail.
+                  Every parent gets answered instantly - even after hours. Movo never lets an opportunity go to
+                  voicemail.
                 </p>
                 <p className="text-sm italic text-gray-500">"Peace of mind - no more lost signups."</p>
               </div>
@@ -892,7 +871,7 @@ export default function Home() {
           <div className="mb-24">
             <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-             Closes Every Conversation
+              Closes Every Conversation
               <span className="text-gray-400 font-normal text-xl">→ Turn calls into enrollments</span>
             </h3>
             <div className="grid md:grid-cols-2 gap-8">
@@ -967,7 +946,7 @@ export default function Home() {
           <div>
             <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
               <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-            Handles Everything Else
+              Handles Everything Else
               <span className="text-gray-400 font-normal text-xl">→ Runs on autopilot</span>
             </h3>
             {/* Centered the single card using mx-auto */}
@@ -1018,7 +997,7 @@ export default function Home() {
               href="https://calendly.com/ari-movoai/30min"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-10 py-5 bg-gray-900 hover:bg-gray-800 text-white text-lg font-semibold rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105"
+              className="inline-block px-10 py-5 bg-gray-900 hover:bg-gray-800 text-white text-lg font-semibold rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer"
             >
               Book a demo
             </a>
@@ -1027,7 +1006,6 @@ export default function Home() {
       </section>
       <section className="bg-gradient-to-b from-blue-50 to-white fade-on-scroll py-[60px]"></section>
       <SuccessStoriesSection id="success" />
-      {/* </CHANGE> Removed standalone null that was being rendered */}
       <section ref={statsRef} className="py-32 bg-white">
         <div className="max-w-[1400px] mx-auto px-8 md:px-16">
           <div className="grid lg:grid-cols-2 gap-20 items-center">
@@ -1037,57 +1015,86 @@ export default function Home() {
                 The Numbers <span className="text-gray-400 italic">Don't Lie.</span>
               </h2>
               <p className="text-lg text-gray-600 leading-relaxed mb-10">
-                Every academy using Movo sees new bookings within days - with no extra staff or marketing spend.
+                Every academy using Movo sees new bookings within days -<br />
+                with no extra staff or marketing spend.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleHeroAudioPlay}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-base font-medium rounded-sm transition-all duration-300 hover:shadow-xl"
+                  className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px] min-w-[280px]"
                 >
-                  {isHeroAudioPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                  {isHeroAudioPlaying ? "Pause" : "Hear Movo in Action"}
+                  <div className="relative w-6 h-6 flex items-center justify-center flex-shrink-0">
+                    {isHeroAudioPlaying ? (
+                      <div className="flex items-center gap-1">
+                        <div
+                          className="w-1 bg-white rounded-full animate-pulse"
+                          style={{ height: "16px", animationDelay: "0ms" }}
+                        ></div>
+                        <div
+                          className="w-1 bg-white rounded-full animate-pulse"
+                          style={{ height: "24px", animationDelay: "150ms" }}
+                        ></div>
+                        <div
+                          className="w-1 bg-white rounded-full animate-pulse"
+                          style={{ height: "14px", animationDelay: "300ms" }}
+                        ></div>
+                        <div
+                          className="w-1 bg-white rounded-full animate-pulse"
+                          style={{ height: "20px", animationDelay: "100ms" }}
+                        ></div>
+                      </div>
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
+                  </div>
+                  <span className="whitespace-nowrap">Hear Movo in Action</span>
                 </button>
                 <a
                   href="https://calendly.com/ari-movoai/30min"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-gray-900 text-base font-medium rounded-sm border-2 border-gray-900 transition-all duration-300 hover:shadow-xl"
+                  className="flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 text-lg font-medium rounded-sm border-2 border-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px] min-w-[200px]"
                 >
                   Book a Demo
                 </a>
               </div>
             </div>
 
-            {/* Right - Horizontal stats with animated counting */}
+            {/* Right - Horizontal stats with static numbers */}
             <div className="flex flex-col sm:flex-row gap-12 sm:gap-16 justify-center">
               {/* Stat 1 - Response time */}
               <div className="text-center">
-                <div className="text-6xl md:text-7xl font-bold text-gray-900 mb-2">
-                  {"<"} {statsVisible ? counts.response.toFixed(1) : "0.0"}s
+                <div className="flex items-center justify-center gap-2 text-6xl md:text-7xl font-bold text-gray-900 mb-2">
+                  <span>{"<"}5s</span>
                 </div>
-                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Average response time</div>
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  Average response time
+                </div>
               </div>
 
               {/* Stat 2 - Conversions */}
               <div className="text-center">
-                <div className="text-6xl md:text-7xl font-bold text-gray-900 mb-2">
-                  + {statsVisible ? counts.conversion : 0}%
+                <div className="flex items-center justify-center gap-2 text-6xl md:text-7xl font-bold text-gray-900 mb-2">
+                  <span>+47%</span>
                 </div>
-                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">More conversions</div>
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  More conversions
+                </div>
               </div>
 
               {/* Stat 3 - Revenue */}
               <div className="text-center">
-                <div className="text-6xl md:text-7xl font-bold text-gray-900 mb-2">
-                  + ${statsVisible ? (counts.revenue / 1000).toFixed(1) : "0.0"}K
+                <div className="flex items-center justify-center gap-2 text-6xl md:text-7xl font-bold text-gray-900 mb-2">
+                  <span>+$4.2K</span>
                 </div>
-                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">New monthly revenue</div>
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  New monthly revenue
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-      {/* </CHANGE> */}
       <section className="py-32 bg-gray-100">
         <div className="max-w-4xl mx-auto px-8 md:px-16 text-center">
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-serif text-gray-900 leading-tight mb-6">
@@ -1096,13 +1103,14 @@ export default function Home() {
             <span className="text-gray-400 italic">Never miss a lead again.</span>
           </h2>
           <p className="text-xl text-gray-600 leading-relaxed mb-12 max-w-2xl mx-auto">
-            Movo sells your programs while you coach - converting every conversation into a booked trial, a new enrolment, or a spot filled.
+            Movo sells your programs while you coach - converting every conversation into a booked trial, a new
+            enrolment, or a spot filled.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
             <button
               onClick={() => setShowCallMe(true)}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105"
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
             >
               <Phone className="w-5 h-5" />
               Call Me
@@ -1111,7 +1119,7 @@ export default function Home() {
               href="https://calendly.com/ari-movoai/30min"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 text-lg font-medium rounded-sm border-2 border-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-105"
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 text-lg font-medium rounded-sm border-2 border-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
             >
               Book a Demo
             </a>
@@ -1120,18 +1128,14 @@ export default function Home() {
           <p className="text-sm text-gray-500">Most academies see results within the first 2 weeks.</p>
         </div>
       </section>
-      {/* </CHANGE> */}
       <ProblemSection />
       <WhoItsFor />
       <HowItWorks />
       <UseCaseStory />
       <LiveActivity />
       <FinalCTA />
-      {/* Start of Updates */}
-      {/* </CHANGE> Removed standalone null that was being rendered */}
       {/* Footer */}
       <footer className="py-24 bg-white border-t border-gray-200">
-        {/* </CHANGE> Changed background from bg-gray-50 to bg-white */}
         <div className="mx-auto max-w-7xl px-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <p className="text-gray-600">© 2025 Movo AI, Inc. All rights reserved.</p>
@@ -1147,7 +1151,6 @@ export default function Home() {
               </a>
             </div>
           </div>
-          {/* </CHANGE> */}
         </div>
       </footer>
       {showCallMe && (
@@ -1159,7 +1162,6 @@ export default function Home() {
             >
               ✕
             </button>
-            {/* </CHANGE> */}
 
             <div className="flex flex-col items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Get a Call from Movo</h2>
@@ -1226,7 +1228,6 @@ export default function Home() {
                   I agree to get a call from Movo
                 </label>
               </div>
-              {/* </CHANGE> */}
 
               <div className="pt-2 pb-2">
                 <p className="text-xs text-gray-500 leading-relaxed">
@@ -1243,15 +1244,13 @@ export default function Home() {
                   .
                 </p>
               </div>
-              {/* </CHANGE> */}
 
               <button
                 type="submit"
-                className="w-full px-6 py-4 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-xl"
+                className="w-full px-6 py-4 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-xl cursor-pointer"
               >
                 Call me
               </button>
-              {/* </CHANGE> */}
             </form>
           </div>
         </div>

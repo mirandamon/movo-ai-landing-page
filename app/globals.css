@@ -155,8 +155,7 @@
   }
   body {
     @apply text-foreground bg-background;
-    /* Added black background to avoid white flash */
-    background: #000;
+    /* Removed black background that was causing the black bar */
   }
 }
 

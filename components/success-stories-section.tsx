@@ -12,7 +12,7 @@ const caseStudies = [
     quote:
       "Before Movo, we missed dozens of clinic calls each week. Now every parent gets a reply instantly — even after hours. Movo runs our clinic campaigns, sends personalized emails and texts, and even closes payments. It's like having a sales team that never clocks out.",
     stats: [
-      { value: "+$5,800", label: "new revenue in 30 days" },
+      { value: "+$7,800", label: "new revenue in 30 days" },
       { value: "+61%", label: "trial sign-ups" },
       { value: "0", label: "missed calls after hours" },
     ],
@@ -25,7 +25,7 @@ const caseStudies = [
     quote:
       "Movo learned our pricing, schedule, and class levels within a week. It now handles 90% of parent conversations — from first inquiry to booked trial. Families love how personal it feels. We just check Stripe and see new payments every day.",
     stats: [
-      { value: "+$6.2K", label: "new monthly revenue" },
+      { value: "+$23.2K", label: "new monthly revenue" },
       { value: "1,200+", label: "parent conversations handled" },
       { value: "+48%", label: "faster follow-ups" },
     ],
