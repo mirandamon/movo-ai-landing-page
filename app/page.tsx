@@ -630,55 +630,55 @@ export default function Home() {
       <section id="product" className="min-h-screen flex items-center">
         <div className="w-full grid lg:grid-cols-2">
           {/* Left side - White background with content */}
-          <div className="bg-white px-8 md:px-16 lg:px-20 py-20 flex items-center">
+          <div className="bg-white px-8 md:px-12 lg:px-16 py-12 flex items-center">
             <div className="max-w-xl">
-              <div className="text-xs font-semibold tracking-widest text-gray-500 mb-8">BUILT FOR SPORTS ACADEMIES</div>
+              <div className="text-xs font-semibold tracking-widest text-gray-500 mb-4">BUILT FOR SPORTS ACADEMIES</div>
 
               <div
                 ref={revenueTargetRef}
-                className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full shadow-sm"
+                className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full shadow-sm"
               >
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm font-semibold text-green-700">+$4,840 in new trials this week</span>
+                <span className="text-xs font-semibold text-green-700">30% better conversion with Movo</span>
               </div>
 
-              <h2 className="text-5xl md:text-6xl lg:text-7xl font-serif leading-tight text-gray-900 mb-8">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif leading-tight text-gray-900 mb-4">
                 AI that learns your academy
                 <span className="block text-gray-400 italic">inside out.</span>
               </h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-10">
+              <p className="text-base text-gray-600 leading-relaxed mb-6">
                 Trains on your programs, pricing, and families - then sells like your best rep.
               </p>
 
               <button
                 onClick={handleLearnVideoPlay}
-                className="group flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm md:text-base font-medium rounded-sm transition-all duration-300 mb-16 hover:shadow-2xl hover:scale-105 cursor-pointer w-auto max-w-fit"
+                className="group flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm md:text-base font-medium rounded-sm transition-all duration-300 mb-8 hover:shadow-2xl hover:scale-105 cursor-pointer w-auto max-w-fit"
               >
-                <div className="relative w-5 h-5 md:w-6 md:h-6 flex items-center justify-center flex-shrink-0">
+                <div className="relative w-4 h-4 md:w-5 md:h-5 flex items-center justify-center flex-shrink-0">
                   {isLearnVideoPlaying ? (
                     <div className="flex items-center gap-1">
                       <div
-                        className="w-1 bg-white rounded-full animate-pulse"
-                        style={{ height: "14px", animationDelay: "0ms" }}
+                        className="w-0.5 bg-white rounded-full animate-pulse"
+                        style={{ height: "10px", animationDelay: "0ms" }}
                       ></div>
                       <div
-                        className="w-1 bg-white rounded-full animate-pulse"
-                        style={{ height: "20px", animationDelay: "150ms" }}
+                        className="w-0.5 bg-white rounded-full animate-pulse"
+                        style={{ height: "14px", animationDelay: "150ms" }}
                       ></div>
                       <div
-                        className="w-1 bg-white rounded-full animate-pulse"
-                        style={{ height: "12px", animationDelay: "300ms" }}
+                        className="w-0.5 bg-white rounded-full animate-pulse"
+                        style={{ height: "8px", animationDelay: "300ms" }}
                       ></div>
                       <div
-                        className="w-1 bg-white rounded-full animate-pulse"
-                        style={{ height: "16px", animationDelay: "100ms" }}
+                        className="w-0.5 bg-white rounded-full animate-pulse"
+                        style={{ height: "12px", animationDelay: "100ms" }}
                       ></div>
                     </div>
                   ) : (
-                    <Play className="w-4 h-4 md:w-4 md:h-4" />
+                    <Play className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   )}
                 </div>
-                <span className="font-medium whitespace-nowrap text-sm md:text-base">Hear Movo learn in action</span>
+                <span className="font-medium whitespace-nowrap text-sm">Hear Movo learn in action</span>
               </button>
               <audio
                 ref={learnVideoRef}
@@ -687,37 +687,31 @@ export default function Home() {
               />
 
               {/* Numbered features */}
-              <div className="space-y-8 border-t border-gray-200 pt-12">
-                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500">
-                  <div className="text-3xl font-bold text-gray-900 flex-shrink-0 group-hover:text-[#D97948] transition-colors duration-300">
-                    01
-                  </div>
+              <div className="space-y-4 border-t border-gray-200 pt-6">
+                <div className="flex gap-4 group cursor-pointer">
+                  <div className="text-2xl font-bold text-gray-900 flex-shrink-0">01</div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Understands your playbook</h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Understands your playbook</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
                       Knows your age groups, pricing, and peak hours so every parent gets the right answer instantly.
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500">
-                  <div className="text-3xl font-bold text-gray-900 flex-shrink-0 group-hover:text-[#D97948] transition-colors duration-300">
-                    02
-                  </div>
+                <div className="flex gap-4 group cursor-pointer">
+                  <div className="text-2xl font-bold text-gray-900 flex-shrink-0">02</div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Connects your systems</h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Connects your systems</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
                       Syncs with your tools like iClassPro, Stripe, and your calendar to manage bookings and payments
                       automatically.
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-6 group cursor-pointer hover:translate-x-2 transition-all duration-500">
-                  <div className="text-3xl font-bold text-gray-900 flex-shrink-0 group-hover:text-[#D97948] transition-colors duration-300">
-                    03
-                  </div>
+                <div className="flex gap-4 group cursor-pointer">
+                  <div className="text-2xl font-bold text-gray-900 flex-shrink-0">03</div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Gets smarter every week</h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Gets smarter every week</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
                       Learns from every call and message to close faster next time.
                     </p>
                   </div>
@@ -728,7 +722,7 @@ export default function Home() {
 
           {/* Right side - Gradient background with Premium Movo Dashboard */}
           <div
-            className="relative px-4 sm:px-6 md:px-12 lg:px-16 py-8 sm:py-12 md:py-16 flex items-center justify-center overflow-hidden"
+            className="relative px-4 sm:px-6 md:px-10 lg:px-12 py-6 sm:py-8 md:py-10 flex items-center justify-center overflow-hidden"
             style={{
               backgroundImage:
                 "url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Kids%20Playing%20Sport%20Graphic%20Nov%2010%202025%20%282%29-V8JNogRABiiVjppDmMwDRCWb6aV7yD.png)",
@@ -741,83 +735,83 @@ export default function Home() {
             <div ref={dashboardRef} className="relative z-10 w-full max-w-4xl">
               <div className="bg-white rounded-lg sm:rounded-xl shadow-xl overflow-hidden border border-gray-200">
                 {/* Header */}
-                <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+                <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-2">
                       <div>
-                        <h3 className="text-base sm:text-lg font-bold text-gray-900">Movo Intelligence</h3>
+                        <h3 className="text-sm sm:text-base font-bold text-gray-900">Movo Intelligence</h3>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 rounded-lg border border-green-200">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs sm:text-sm font-semibold text-green-700">Active</span>
+                    <div className="flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:py-1 bg-green-50 rounded-lg border border-green-200">
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                      <span className="text-[10px] sm:text-xs font-semibold text-green-700">Active</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Content - Reduced padding for mobile */}
-                <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {/* Content - Heavily reduced padding */}
+                <div className="p-2.5 sm:p-3 md:p-4 space-y-2.5 sm:space-y-3 md:space-y-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                     <div className="text-left">
-                      <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-0.5">
                         ${dashboardStats.revenue.toLocaleString()}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">
+                      <div className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-0.5">
                         REVENUE THIS WEEK
                       </div>
-                      <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600 font-semibold">
+                      <div className="flex items-center gap-0.5 text-[10px] sm:text-xs text-green-600 font-semibold">
                         <span>↑</span>
                         <span>20% from last week</span>
                       </div>
                     </div>
-                    <div className="text-left border-l border-gray-200 pl-4 sm:pl-6">
-                      <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                    <div className="text-left border-l border-gray-200 pl-2 sm:pl-3 md:pl-4">
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-0.5">
                         {dashboardStats.calls}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide font-medium">
+                      <div className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wide font-medium">
                         CALLS
                       </div>
                     </div>
-                    <div className="text-left border-l border-gray-200 pl-4 sm:pl-6">
-                      <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                    <div className="text-left border-l border-gray-200 pl-2 sm:pl-3 md:pl-4">
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-0.5">
                         {dashboardStats.messages}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide font-medium">
+                      <div className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wide font-medium">
                         MESSAGES
                       </div>
                     </div>
-                    <div className="text-left border-l border-gray-200 pl-4 sm:pl-6">
-                      <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                    <div className="text-left border-l border-gray-200 pl-2 sm:pl-3 md:pl-4">
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-0.5">
                         {dashboardStats.emails.toLocaleString()}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide font-medium">
+                      <div className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wide font-medium">
                         EMAILS
                       </div>
                     </div>
                   </div>
 
-                  {/* Two-column layout: Insights & Conversations - Stack on mobile */}
-                  <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-                    {/* Left: What Movo Learned - Added mobile margin top */}
-                    <div className="md:border-r border-gray-200 md:pr-4 sm:md:pr-6 mt-4 md:mt-0">
-                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-4">
-                        <span className="text-base sm:text-xl">💡</span>
-                        <h4 className="text-sm sm:text-base font-bold text-gray-900">What Movo Learned This Week</h4>
+                  {/* Two-column layout: Insights & Conversations */}
+                  <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
+                    {/* Left: What Movo Learned */}
+                    <div className="md:border-r border-gray-200 md:pr-3 sm:md:pr-4 mt-2 md:mt-0">
+                      <div className="flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
+                        <span className="text-sm sm:text-base">💡</span>
+                        <h4 className="text-xs sm:text-sm font-bold text-gray-900">What Movo Learned This Week</h4>
                       </div>
-                      <ul className="space-y-1.5 sm:space-y-2.5 text-xs sm:text-sm text-gray-700">
-                        <li className="flex items-start gap-1.5 sm:gap-2">
+                      <ul className="space-y-1 sm:space-y-1.5 text-[10px] sm:text-xs text-gray-700">
+                        <li className="flex items-start gap-1 sm:gap-1.5">
                           <span className="text-gray-400 flex-shrink-0">•</span>
                           <span>Parents ask most about 'Saturday programs'</span>
                         </li>
-                        <li className="flex items-start gap-1.5 sm:gap-2">
+                        <li className="flex items-start gap-1 sm:gap-1.5">
                           <span className="text-gray-400 flex-shrink-0">•</span>
                           <span>Peak call times: 4–8pm</span>
                         </li>
-                        <li className="flex items-start gap-1.5 sm:gap-2">
+                        <li className="flex items-start gap-1 sm:gap-1.5">
                           <span className="text-gray-400 flex-shrink-0">•</span>
                           <span>Best conversion script: "Would you like to book a free trial?"</span>
                         </li>
-                        <li className="flex items-start gap-1.5 sm:gap-2">
+                        <li className="flex items-start gap-1 sm:gap-1.5">
                           <span className="text-blue-600 flex-shrink-0">•</span>
                           <span className="font-medium">
                             Most booked program: "Youth Development League (Ages 8–10)"
@@ -826,51 +820,49 @@ export default function Home() {
                       </ul>
                     </div>
 
-                    {/* Right: Recent Conversations - Hidden on mobile with md:block */}
-                    <div className="hidden md:block md:pl-4 sm:md:pl-6">
-                      <h4 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-4">
+                    {/* Right: Recent Conversations - Hidden on mobile */}
+                    <div className="hidden md:block md:pl-3 sm:md:pl-4">
+                      <h4 className="text-xs sm:text-sm font-bold text-gray-900 mb-1.5 sm:mb-2">
                         Recent Conversations
                       </h4>
-                      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
-                        <div className="text-xs sm:text-sm text-gray-700">
+                      <div className="bg-gray-50 rounded-lg p-2 sm:p-2.5 space-y-1.5 sm:space-y-2">
+                        <div className="text-[10px] sm:text-xs text-gray-700">
                           <p>Hi Jessica! Yes, we have two options:</p>
                         </div>
-                        <div className="bg-blue-500 text-white rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm">
+                        <div className="bg-blue-500 text-white rounded-lg px-2 sm:px-2.5 py-1.5 sm:py-2 text-[10px] sm:text-xs">
                           Saturday 10am or Wednesday 4pm.
                         </div>
-                        <div className="text-xs sm:text-sm text-gray-700">
+                        <div className="text-[10px] sm:text-xs text-gray-700">
                           <p>Saturday works!</p>
                         </div>
-                        <div className="flex items-center gap-2 bg-white border border-green-200 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 mt-2 sm:mt-3">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-[10px] sm:text-xs font-bold">✓</span>
+                        <div className="flex items-center gap-1.5 bg-white border border-green-200 rounded-lg px-2 py-1.5 mt-1.5 sm:mt-2">
+                          <div className="w-4 h-4 sm:w-5 sm:h-5 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-[9px] sm:text-[10px] font-bold">✓</span>
                           </div>
                           <div className="flex-1">
-                            <p className="text-xs sm:text-sm font-semibold text-gray-900">Trial booked</p>
-                            <p className="text-[10px] sm:text-xs text-gray-600">$150 revenде</p>
+                            <p className="text-[10px] sm:text-xs font-semibold text-gray-900">Trial booked</p>
+                            <p className="text-[9px] sm:text-[10px] text-gray-600">$150 revenде</p>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Revenue Growth Chart - Compact on mobile */}
-
-                  {/* Connected Systems - Compact on mobile */}
-                  <div className="border-t border-gray-200 pt-3 sm:pt-4 md:pt-6">
-                    <h4 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-4">Connected Systems</h4>
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white rounded-lg border border-gray-200">
-                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-700">IClassPro</span>
+                  {/* Connected Systems */}
+                  <div className="border-t border-gray-200 pt-2 sm:pt-2.5 md:pt-3">
+                    <h4 className="text-xs sm:text-sm font-bold text-gray-900 mb-1.5 sm:mb-2">Connected Systems</h4>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-white rounded-lg border border-gray-200">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                        <span className="text-[10px] sm:text-xs font-medium text-gray-700">IClassPro</span>
                       </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white rounded-lg border border-gray-200">
-                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-700">Stripe</span>
+                      <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-white rounded-lg border border-gray-200">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        <span className="text-[10px] sm:text-xs font-medium text-gray-700">Stripe</span>
                       </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white rounded-lg border border-gray-200">
-                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"></div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-700">Google Calendar</span>
+                      <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-white rounded-lg border border-gray-200">
+                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                        <span className="text-[10px] sm:text-xs font-medium text-gray-700">Google Calendar</span>
                       </div>
                     </div>
                   </div>
