@@ -380,6 +380,80 @@ export default function Home() {
     return () => observer.disconnect()
   }, [isRevenueVisible])
 
+  const [dashboardStats, setDashboardStats] = useState({ revenue: 0, calls: 0, messages: 0, emails: 0 })
+  const [isDashboardVisible, setIsDashboardVisible] = useState(false)
+  const dashboardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.3,
+      rootMargin: "0px",
+    }
+
+    const animateDashboard = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !isDashboardVisible) {
+          setIsDashboardVisible(true)
+
+          // Animate revenue (target: 7840)
+          let revenueVal = 0
+          const revenueTimer = setInterval(() => {
+            revenueVal += 130
+            if (revenueVal >= 7840) {
+              setDashboardStats((prev) => ({ ...prev, revenue: 7840 }))
+              clearInterval(revenueTimer)
+            } else {
+              setDashboardStats((prev) => ({ ...prev, revenue: Math.floor(revenueVal) }))
+            }
+          }, 20)
+
+          // Animate calls (target: 47)
+          let callsVal = 0
+          const callsTimer = setInterval(() => {
+            callsVal += 1
+            if (callsVal >= 47) {
+              setDashboardStats((prev) => ({ ...prev, calls: 47 }))
+              clearInterval(callsTimer)
+            } else {
+              setDashboardStats((prev) => ({ ...prev, calls: Math.floor(callsVal) }))
+            }
+          }, 30)
+
+          // Animate messages (target: 312)
+          let messagesVal = 0
+          const messagesTimer = setInterval(() => {
+            messagesVal += 5
+            if (messagesVal >= 312) {
+              setDashboardStats((prev) => ({ ...prev, messages: 312 }))
+              clearInterval(messagesTimer)
+            } else {
+              setDashboardStats((prev) => ({ ...prev, messages: Math.floor(messagesVal) }))
+            }
+          }, 25)
+
+          // Animate emails (target: 456)
+          let emailsVal = 0
+          const emailsTimer = setInterval(() => {
+            emailsVal += 7
+            if (emailsVal >= 456) {
+              setDashboardStats((prev) => ({ ...prev, emails: 456 }))
+              clearInterval(emailsTimer)
+            } else {
+              setDashboardStats((prev) => ({ ...prev, emails: Math.floor(emailsVal) }))
+            }
+          }, 25)
+        }
+      })
+    }
+
+    const observer = new IntersectionObserver(animateDashboard, observerOptions)
+    if (dashboardRef.current) {
+      observer.observe(dashboardRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [isDashboardVisible])
+
   useEffect(() => {
     const observerOptions = {
       threshold: 0.3,
@@ -462,7 +536,7 @@ export default function Home() {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-3xl leading-relaxed px-4">
-            Movo calls every parent, fills your classes, and grows your revenue - automatically.
+            Movo calls every parent, fills your sports programs, and grows your revenue - automatically.
           </p>
 
           <div className="flex flex-col w-full sm:w-auto sm:flex-row gap-3 sm:gap-4 justify-center px-4">
@@ -645,7 +719,7 @@ export default function Home() {
 
           {/* Right side - Gradient background with Premium Movo Dashboard */}
           <div
-            className="relative px-8 md:px-16 lg:px-20 py-20 flex items-center justify-center overflow-hidden"
+            className="relative px-4 sm:px-8 md:px-16 lg:px-20 py-12 sm:py-16 md:py-20 flex items-center justify-center overflow-hidden"
             style={{
               backgroundImage:
                 "url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Kids%20Playing%20Sport%20Graphic%20Nov%2010%202025%20%282%29-V8JNogRABiiVjppDmMwDRCWb6aV7yD.png)",
@@ -655,113 +729,134 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-blue-50/40 to-white/50" />
 
-            <div className="relative z-10 w-full max-w-2xl">
-              <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-                {/* Header - Clean minimal style like reference */}
+            <div ref={dashboardRef} className="relative z-10 w-full max-w-4xl">
+              <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+                {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-sm font-semibold">M</span>
-                      </div>
                       <div>
-                        <h3 className="text-base font-semibold text-gray-900">Movo Intelligence</h3>
+                        <h3 className="text-lg font-bold text-gray-900">Move Intelligence</h3>
                         <p className="text-sm text-gray-500">Real-time academy insights</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-md border border-green-200">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                      <span className="text-xs font-medium text-green-700">Live</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-200">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm font-semibold text-green-700">Active</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Content - Clean layout matching analytics reference */}
+                {/* Content */}
                 <div className="p-6 space-y-6">
-                  {/* Stats Row - Clean white layout with subtle borders */}
-                  <div className="grid grid-cols-3 gap-6">
-                    <div className="border-r border-gray-200 pr-4">
-                      <div className="text-3xl font-bold text-gray-900 mb-1">$7,840</div>
-                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">This Week</div>
-                      <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                        <span>↑</span> <span>23% from last week</span>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="text-left col-span-2 lg:col-span-1">
+                      <div className="text-4xl font-bold text-gray-900 mb-1">
+                        ${dashboardStats.revenue.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">
+                        Revenue THIS WEEK
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-green-600 font-semibold">
+                        <span>↑</span>
+                        <span>20% from last week</span>
                       </div>
                     </div>
-                    <div className="border-r border-gray-200 pr-4">
-                      <div className="text-3xl font-bold text-gray-900 mb-1">47</div>
-                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Conversations</div>
-                      <div className="text-xs text-gray-600">18 trials booked</div>
+                    <div className="text-left lg:border-l border-gray-200 lg:pl-4">
+                      <div className="text-4xl font-bold text-gray-900 mb-1">{dashboardStats.calls}</div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">CALLS</div>
                     </div>
-                    <div className="pr-4">
-                      <div className="text-3xl font-bold text-gray-900 mb-1">142</div>
-                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Data Intelligence</div>
-                      <div className="text-xs text-gray-600">new parent leads this month</div>
+                    <div className="text-left lg:border-l border-gray-200 lg:pl-4">
+                      <div className="text-4xl font-bold text-gray-900 mb-1">{dashboardStats.messages}</div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">MESSAGES</div>
                     </div>
-                  </div>
-
-                  {/* Activity Feed - Clean list style from reference */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
-                      <span className="text-xs text-gray-400">Last 30 minutes</span>
-                    </div>
-                    <div className="space-y-2">
-                      {/* Activity Item 1 */}
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
-                        <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-sm font-semibold">✓</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Emma's family booked trial</p>
-                        </div>
-                        <span className="text-sm font-semibold text-green-600">+$160</span>
-                      </div>
-
-                      {/* Activity Item 2 */}
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
-                        <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-sm">💬</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Mike's mom asked about pricing</p>
-                        </div>
-                        <span className="text-sm text-blue-600">2m ago</span>
-                      </div>
-
-                      {/* Activity Item 3 */}
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
-                        <div className="w-9 h-9 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-sm">🔄</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Re-engaged Sarah Martinez</p>
-                        </div>
-                        <span className="text-sm text-purple-600">5m ago</span>
-                      </div>
+                    <div className="text-left lg:border-l border-gray-200 lg:pl-4">
+                      <div className="text-4xl font-bold text-gray-900 mb-1">{dashboardStats.emails}</div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">EMAILS</div>
                     </div>
                   </div>
 
-                  {/* Connected Systems - Clean badge grid from integrations reference */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
-                      Connected Systems
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-gray-700">iClassPro</span>
+                  {/* Two-column layout: Insights & Conversations */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Left: What Movo Learned */}
+                    <div className="md:border-r border-gray-200 md:pr-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="text-xl">💡</span>
+                        <h4 className="text-base font-bold text-gray-900">What Movo Learned This Week</h4>
                       </div>
-                      <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
+                      <ul className="space-y-2.5 text-sm text-gray-700">
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 flex-shrink-0">•</span>
+                          <span>Parents ask most about 'Saturday programs'</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 flex-shrink-0">•</span>
+                          <span>Peak call times: 4–8pm</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 flex-shrink-0">•</span>
+                          <span>Best conversion script: "Would you live to book a free trial?"</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-600 flex-shrink-0">•</span>
+                          <span className="font-medium">
+                            Most booked program: "Youth Development League (Ages 8–10)"
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* Right: Recent Conversations */}
+                    <div className="md:pl-6">
+                      <h4 className="text-base font-bold text-gray-900 mb-4">Recent Conversations</h4>
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                        <div className="text-sm text-gray-700">
+                          <p>Hi Jessica! Yes, we have two options:</p>
+                        </div>
+                        <div className="bg-blue-500 text-white rounded-lg px-4 py-2.5 text-sm">
+                          Saturday 10am ar Wednesday 4pm.
+                        </div>
+                        <div className="text-sm text-gray-700">
+                          <p>Saturday works!</p>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white border border-green-200 rounded-lg px-3 py-2 mt-3">
+                          <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs font-bold">✓</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900">Trial booked</p>
+                            <p className="text-xs text-gray-600">$150 revenue</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Revenue Growth Chart */}
+                  <div className="border-t border-gray-200 pt-6">
+                    <h4 className="text-base font-bold text-gray-900 mb-2">Revenue Growth</h4>
+                    <p className="text-sm text-gray-600 mb-4">Automated 50% of parent conversations</p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-3xl font-bold text-gray-900">+$23.2K</span>
+                      <span className="text-sm text-gray-600">new monthly revenue</span>
+                    </div>
+                  </div>
+
+                  {/* Connected Systems */}
+                  <div className="border-t border-gray-200 pt-6">
+                    <h4 className="text-base font-bold text-gray-900 mb-4">Connected Systems</h4>
+                    <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-gray-700">IClassPro</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <span className="text-sm font-medium text-gray-700">Stripe</span>
                       </div>
-                      <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                         <span className="text-sm font-medium text-gray-700">Google Calendar</span>
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-gray-700">Mindbody</span>
                       </div>
                     </div>
                   </div>
@@ -891,6 +986,9 @@ export default function Home() {
                         <div className="text-[10px] md:text-xs font-bold text-green-700 bg-green-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded whitespace-nowrap">
                           FULL ✅
                         </div>
+                      </div>
+                      <div className="text-[10px] md:text-xs font-bold text-green-700 bg-green-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded whitespace-nowrap">
+                        FULL ✅
                       </div>
                       <div className="text-[10px] md:text-xs text-gray-600 mb-1.5 md:mb-2">11/12 spots filled</div>
                       <div className="w-full bg-gray-100 rounded-full h-2.5 md:h-3 mb-1.5 md:mb-2">
@@ -1072,12 +1170,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right - Horizontal stats with static numbers */}
-            <div className="flex flex-col gap-8 sm:flex-row sm:gap-12 md:gap-16 justify-center">
+            {/* Right - Horizontal stats with animated numbers */}
+            <div ref={dashboardRef} className="flex flex-col gap-8 sm:flex-row sm:gap-12 md:gap-16 justify-center">
               {/* Stat 1 - Response time */}
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-2">
-                  <span>{"<"}5s</span>
+                  <span>{` < ${dashboardStats.response}s`}</span>
                 </div>
                 <div className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide px-4">
                   Average response time
@@ -1087,7 +1185,7 @@ export default function Home() {
               {/* Stat 2 - Conversions */}
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-2">
-                  <span>+47%</span>
+                  <span>+{dashboardStats.conversion}%</span>
                 </div>
                 <div className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide px-4">
                   More conversions
@@ -1097,7 +1195,7 @@ export default function Home() {
               {/* Stat 3 - Revenue */}
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-2">
-                  <span>+$4.2K</span>
+                  <span>+${dashboardStats.revenue.toLocaleString()}</span>
                 </div>
                 <div className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide px-4">
                   New monthly revenue
