@@ -539,12 +539,13 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 md:px-8 lg:px-16 py-32 md:py-20 text-center">
           <h1 className="font-serif text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-normal leading-tight text-white mb-6 max-w-5xl">
-            AI That Sells for Your Academy
+            AI That Sells for Your
             <br />
+            Sports Academy
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-3xl leading-relaxed px-4">
-            Movo calls every parent, fills your sports programs, and grows your revenue - automatically.
+            Movo calls every parent, books enrollments, and grows your revenue - automatically.
           </p>
 
           <div className="flex flex-col w-full sm:w-auto sm:flex-row gap-3 sm:gap-4 justify-center px-4">
@@ -586,12 +587,12 @@ export default function Home() {
                   <Play className="w-4 h-4 md:w-5 md:h-5" />
                 )}
               </div>
-              <span className="font-medium whitespace-nowrap text-sm md:text-base">Hear how Movo sells</span>
+              <span className="font-medium whitespace-nowrap text-sm md:text-base">Listen to Movo sell</span>
             </button>
 
             <audio
               ref={heroAudioRef}
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Mono%20Audio%20File%20%281%29-Ky1VPeJmOkmuanheihF0JpGzdJSFY3.wav"
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Video_1-D2xUSPWZjqPYNOsmcPCtTFZXhoqY0u.mp3"
               className="hidden"
             />
           </div>
@@ -677,11 +678,11 @@ export default function Home() {
                     <Play className="w-4 h-4 md:w-4 md:h-4" />
                   )}
                 </div>
-                <span className="font-medium whitespace-nowrap text-sm md:text-base">See Movo learn in action</span>
+                <span className="font-medium whitespace-nowrap text-sm md:text-base">Hear Movo learn in action</span>
               </button>
               <audio
                 ref={learnVideoRef}
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Mono%20Audio%20File%20%281%29-Ky1VPeJmOkmuanheihF0JpGzdJSFY3.wav"
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Nadav%20Vieder%20Video%20Nov%2011%202025-j07YSAJHlsf8TfJYGARpfwPwkjIzUn.mp3"
                 className="hidden"
               />
 
@@ -715,7 +716,7 @@ export default function Home() {
                     03
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Gets sharper every week</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Gets smarter every week</h3>
                     <p className="text-gray-600 leading-relaxed">
                       Learns from every call and message to close faster next time.
                     </p>
@@ -745,7 +746,6 @@ export default function Home() {
                     <div className="flex items-center gap-2 sm:gap-3">
                       <div>
                         <h3 className="text-base sm:text-lg font-bold text-gray-900">Movo Intelligence</h3>
-                        
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 rounded-lg border border-green-200">
@@ -900,7 +900,7 @@ export default function Home() {
                 <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                 Drives New Revenue
               </span>
-              <span className="text-gray-400 font-normal text-xl ml-5 md:ml-0">→ Capture every opportunity</span>
+              <span className="text-gray-400 font-normal text-xl ml-5 md:ml-0"></span>
             </h3>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -981,7 +981,6 @@ export default function Home() {
                 <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                 Closes Every Conversation
               </span>
-              <span className="text-gray-400 font-normal text-xl ml-5 md:ml-0">→ Turn calls into enrollments</span>
             </h3>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -1067,7 +1066,6 @@ export default function Home() {
                 <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
                 Handles Everything Else
               </span>
-              <span className="text-gray-400 font-normal text-xl ml-5 md:ml-0">→ Runs on autopilot</span>
             </h3>
             {/* Centered the single card using mx-auto */}
             <div className="max-w-2xl mx-auto">
