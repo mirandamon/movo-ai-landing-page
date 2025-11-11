@@ -3,11 +3,29 @@
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { useState } from "react"
+import posthog from "posthog-js"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  // Helper function to track clicks with rich metadata
+  const trackClick = (
+    elementType: string,
+    elementText: string,
+    section: string,
+    metadata?: Record<string, any>
+  ) => {
+    posthog.capture("button_click", {
+      element_type: elementType,
+      element_text: elementText,
+      section: section,
+      page_url: window.location.pathname,
+      ...metadata,
+    })
+  }
+
   const scrollToSection = (sectionId: string) => {
+    trackClick("button", `Navigate to ${sectionId}`, "header", { action: "scroll_to_section", section_id: sectionId })
     const element = document.getElementById(sectionId)
     if (element) {
       const headerOffset = 80 // Height of fixed header
@@ -25,7 +43,11 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-[1600px] mx-auto flex h-20 items-center justify-between px-6 md:px-8 lg:px-16">
-        <a href="/" className="flex items-end gap-0.5 group">
+        <a 
+          href="/" 
+          onClick={() => trackClick("link", "Movo Logo", "header", { action: "navigate_home", link_type: "logo" })}
+          className="flex items-end gap-0.5 group"
+        >
           <img
             src="/images/design-mode/Kids%20Playing%20Sport%20Graphic%20Nov%209%202025%20%287%29%20%281%29.png"
             alt="Movo Logo"
@@ -59,6 +81,7 @@ export function Header() {
           href="https://calendly.com/ari-movoai/30min"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackClick("link", "Book a demo", "header", { url: "https://calendly.com/ari-movoai/30min", cta_type: "primary", location: "desktop_nav" })}
           className="hidden md:block"
         >
           <Button
@@ -71,7 +94,10 @@ export function Header() {
 
         <div className="flex md:hidden">
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              trackClick("button", mobileMenuOpen ? "Close Menu" : "Open Menu", "header", { action: mobileMenuOpen ? "close_mobile_menu" : "open_mobile_menu", menu_type: "mobile" })
+              setMobileMenuOpen(!mobileMenuOpen)
+            }}
             className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
             aria-label="Toggle menu"
           >
@@ -105,7 +131,10 @@ export function Header() {
               href="https://calendly.com/ari-movoai/30min"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => {
+                trackClick("link", "Book a demo", "header", { url: "https://calendly.com/ari-movoai/30min", cta_type: "primary", location: "mobile_menu" })
+                setMobileMenuOpen(false)
+              }}
               className="py-3 text-base font-medium text-gray-900 hover:text-gray-700 transition-colors"
             >
               Book a demo
