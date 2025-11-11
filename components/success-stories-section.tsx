@@ -76,7 +76,7 @@ export function SuccessStoriesSection() {
             return (
               <div
                 key={index}
-                className="bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 rounded-3xl p-10 min-h-[500px] flex flex-col justify-between transition-all duration-500 hover:shadow-xl relative"
+                className="bg-gradient-to-br from-blue-100 via-indigo-50 to-yellow-100 rounded-3xl p-10 min-h-[500px] flex flex-col justify-between transition-all duration-500 hover:shadow-xl relative"
               >
                 <div className="absolute top-6 right-6 text-xs text-gray-400 italic">{caseStudy.timestamp}</div>
 
