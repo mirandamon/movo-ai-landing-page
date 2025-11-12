@@ -26,6 +26,29 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: "Movo AI - The AI Platform for Sports Academies",
   description: "Turn missed calls into enrollments with AI phone reps",
+  metadataBase: new URL("https://movoai.co"),
+  openGraph: {
+    title: "Movo AI - The AI Platform for Sports Academies",
+    description: "Movo calls every parent, books enrollments, and grows your revenue - automatically.",
+    url: "https://movoai.co",
+    siteName: "Movo AI",
+    images: [
+      {
+        url: "/movo-og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Movo AI - The AI Platform for Sports Academies",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Movo AI - The AI Platform for Sports Academies",
+    description: "Movo calls every parent, books enrollments, and grows your revenue - automatically.",
+    images: ["/movo-og-image.jpg"],
+  },
   generator: "v0.app",
   icons: {
     icon: "/movo-icon.png",
