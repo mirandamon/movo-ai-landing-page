@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { Phone, Play, Pause } from "lucide-react"
+import posthog from "posthog-js"
 import { Header } from "@/components/header"
 import { ProblemSection } from "@/components/problem-section"
 import { WhoItsFor } from "@/components/who-its-for"
@@ -20,6 +21,21 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isHeroAudioPlaying, setIsHeroAudioPlaying] = useState(false)
   const [isLearnVideoPlaying, setIsLearnVideoPlaying] = useState(false)
+
+  const trackClick = (
+    elementType: string,
+    elementText: string,
+    section: string,
+    metadata?: Record<string, any>,
+  ) => {
+    posthog.capture("button_click", {
+      element_type: elementType,
+      element_text: elementText,
+      section,
+      page_url: typeof window !== "undefined" ? window.location.pathname : "",
+      ...metadata,
+    })
+  }
   const learnVideoRef = useRef<HTMLAudioElement>(null)
   const heroAudioRef = useRef<HTMLAudioElement>(null)
   const [audioProgress, setAudioProgress] = useState(0)
@@ -67,6 +83,9 @@ export default function Home() {
   const [currentProofIndex, setCurrentProofIndex] = useState(0)
 
   const [callMeForm, setCallMeForm] = useState({ name: "", email: "", phone: "", newsletter: true })
+  const [isSubmittingCall, setIsSubmittingCall] = useState(false)
+  const [callError, setCallError] = useState<string | null>(null)
+  const [callSuccess, setCallSuccess] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -251,13 +270,84 @@ export default function Home() {
     // Handle demo submission logic
   }
 
-  const handleCallMeSubmit = (e: React.FormEvent) => {
+  const handleCallMeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Call Me form submitted:", callMeForm)
-    // Here you would typically send this to your backend
-    setShowCallMe(false)
-    // Reset form
-    setCallMeForm({ name: "", email: "", phone: "", newsletter: true })
+    setCallError(null)
+    setCallSuccess(false)
+    setIsSubmittingCall(true)
+
+    try {
+      const response = await fetch("/api/create-call", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: callMeForm.name,
+          email: callMeForm.email,
+          phone: callMeForm.phone,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to initiate call")
+      }
+
+      setCallSuccess(true)
+
+      const emailDomain = callMeForm.email.split("@")[1] || "unknown"
+      let phoneCountryCode = "+1"
+      const cleanedPhone = callMeForm.phone.replace(/[^\d+]/g, "")
+      if (cleanedPhone.startsWith("+")) {
+        const match = cleanedPhone.match(/^\+(\d{1,3})/)
+        if (match) {
+          phoneCountryCode = `+${match[1]}`
+        }
+      } else if (cleanedPhone.startsWith("1") && cleanedPhone.length >= 11) {
+        phoneCountryCode = "+1"
+      }
+
+      const firstName = callMeForm.name.trim().split(" ")[0] || ""
+
+      posthog.capture("call_request_submitted", {
+        call_id: data.callId,
+        email_domain: emailDomain,
+        phone_country_code: phoneCountryCode,
+        first_name: firstName,
+      })
+
+      fetch("/api/notify-slack", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          call_id: data.callId,
+          name: callMeForm.name,
+          email: callMeForm.email,
+          phone: callMeForm.phone,
+          email_domain: emailDomain,
+          phone_country_code: phoneCountryCode,
+          first_name: firstName,
+        }),
+      }).catch((error) => {
+        console.error("Failed to send Slack notification:", error)
+      })
+
+      setTimeout(() => {
+        setShowCallMe(false)
+        setCallMeForm({ name: "", email: "", phone: "", newsletter: true })
+        setCallSuccess(false)
+      }, 2000)
+    } catch (error) {
+      setCallError(
+        error instanceof Error ? error.message : "Failed to initiate call. Please try again.",
+      )
+    } finally {
+      setIsSubmittingCall(false)
+    }
   }
 
   useEffect(() => {
@@ -553,13 +643,25 @@ export default function Home() {
               href="https://calendly.com/ari-movoai/30min"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                trackClick("link", "Book a demo", "hero", {
+                  url: "https://calendly.com/ari-movoai/30min",
+                  cta_type: "primary",
+                })
+              }
               className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-[#D97948] hover:bg-[#C96838] text-white text-sm sm:text-base font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto cursor-pointer min-h-[48px]"
             >
               <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
               Book a demo
             </a>
             <button
-              onClick={handleHeroAudioPlay}
+              onClick={() => {
+                trackClick("button", "Listen to Movo sell", "hero", {
+                  action: isHeroAudioPlaying ? "pause" : "play",
+                  media_type: "audio",
+                })
+                handleHeroAudioPlay()
+              }}
               className="group flex items-center justify-center gap-3 px-4 py-2 md:px-6 md:py-3 bg-white/10 hover:bg-white/20 text-white text-sm md:text-base font-medium rounded-sm transition-all duration-300 border border-white/20 backdrop-blur-sm hover:shadow-2xl hover:scale-105 w-full sm:w-auto cursor-pointer min-h-[40px] md:min-h-[48px] min-w-[200px] md:min-w-[240px]"
             >
               <div className="relative w-6 h-6 md:w-8 md:h-8 flex items-center justify-center flex-shrink-0">
@@ -617,7 +719,13 @@ export default function Home() {
         </div>
       </section>
       <button
-        onClick={() => setShowCallMe(true)}
+        onClick={() => {
+          trackClick("button", "Talk to Movo", "floating_cta", {
+            button_type: "floating",
+            action: "open_call_modal",
+          })
+          setShowCallMe(true)
+        }}
         className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white text-gray-900 font-semibold rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 group cursor-pointer"
       >
         <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
@@ -651,7 +759,13 @@ export default function Home() {
               </p>
 
               <button
-                onClick={handleLearnVideoPlay}
+                onClick={() => {
+                  trackClick("button", "Hear Movo learn in action", "product", {
+                    action: isLearnVideoPlaying ? "pause" : "play",
+                    media_type: "audio",
+                  })
+                  handleLearnVideoPlay()
+                }}
                 className="group flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm md:text-base font-medium rounded-sm transition-all duration-300 mb-8 hover:shadow-2xl hover:scale-105 cursor-pointer w-auto max-w-fit"
               >
                 <div className="relative w-4 h-4 md:w-5 md:h-5 flex items-center justify-center flex-shrink-0">
@@ -1111,6 +1225,13 @@ export default function Home() {
               href="https://calendly.com/ari-movoai/30min"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                trackClick("link", "Book a demo", "solution", {
+                  url: "https://calendly.com/ari-movoai/30min",
+                  cta_type: "primary",
+                  location: "solution_section",
+                })
+              }
               className="inline-block px-10 py-5 bg-gray-900 hover:bg-gray-800 text-white text-lg font-semibold rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer"
             >
               Book a demo
@@ -1134,7 +1255,13 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={handleHeroAudioPlay}
+                  onClick={() => {
+                    trackClick("button", "Hear Movo in Action", "stats", {
+                      action: isHeroAudioPlaying ? "pause" : "play",
+                      media_type: "audio",
+                    })
+                    handleHeroAudioPlay()
+                  }}
                   className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
                 >
                   <div className="relative w-6 h-6 flex items-center justify-center flex-shrink-0">
@@ -1167,6 +1294,12 @@ export default function Home() {
                   href="https://calendly.com/ari-movoai/30min"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() =>
+                    trackClick("link", "Book a Demo", "stats", {
+                      url: "https://calendly.com/ari-movoai/30min",
+                      cta_type: "secondary",
+                    })
+                  }
                   className="flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 text-lg font-medium rounded-sm border-2 border-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
                 >
                   Book a Demo
@@ -1223,7 +1356,13 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
             <button
-              onClick={() => setShowCallMe(true)}
+              onClick={() => {
+                trackClick("button", "Call Me", "final_cta", {
+                  action: "open_call_modal",
+                  cta_type: "primary",
+                })
+                setShowCallMe(true)
+              }}
               className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
             >
               <Phone className="w-5 h-5" />
@@ -1233,6 +1372,12 @@ export default function Home() {
               href="https://calendly.com/ari-movoai/30min"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                trackClick("link", "Book a Demo", "final_cta", {
+                  url: "https://calendly.com/ari-movoai/30min",
+                  cta_type: "secondary",
+                })
+              }
               className="flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 text-lg font-medium rounded-sm border-2 border-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
             >
               Book a Demo
@@ -1255,13 +1400,40 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
             <p className="text-gray-600">© 2025 Movo AI, Inc. All rights reserved.</p>
             <div className="flex items-center gap-8">
-              <a href="/portal/login" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">
+              <a
+                href="/portal/login"
+                onClick={() =>
+                  trackClick("link", "Portal", "footer", {
+                    url: "/portal/login",
+                    link_type: "portal",
+                  })
+                }
+                className="text-gray-600 hover:text-gray-900 transition-colors font-medium"
+              >
                 Portal
               </a>
-              <a href="/terms" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">
+              <a
+                href="/terms"
+                onClick={() =>
+                  trackClick("link", "Terms", "footer", {
+                    url: "/terms",
+                    link_type: "legal",
+                  })
+                }
+                className="text-gray-600 hover:text-gray-900 transition-colors font-medium"
+              >
                 Terms
               </a>
-              <a href="/privacy" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">
+              <a
+                href="/privacy"
+                onClick={() =>
+                  trackClick("link", "Privacy", "footer", {
+                    url: "/privacy",
+                    link_type: "legal",
+                  })
+                }
+                className="text-gray-600 hover:text-gray-900 transition-colors font-medium"
+              >
                 Privacy
               </a>
             </div>
@@ -1271,7 +1443,17 @@ export default function Home() {
             <p className="text-sm text-gray-600 leading-relaxed max-w-3xl mx-auto">
               Movo AI automates communications and may use AI-generated voice or text responses. Conversations may be
               recorded or analyzed to improve service quality, consistent with our{" "}
-              <a href="/privacy" className="text-gray-900 underline hover:text-gray-700 transition-colors">
+              <a
+                href="/privacy"
+                onClick={() =>
+                  trackClick("link", "Privacy Policy", "footer", {
+                    url: "/privacy",
+                    link_type: "legal",
+                    context: "disclaimer",
+                  })
+                }
+                className="text-gray-900 underline hover:text-gray-700 transition-colors"
+              >
                 Privacy Policy
               </a>
               .
@@ -1283,7 +1465,13 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
           <div className="relative bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
             <button
-              onClick={() => setShowCallMe(false)}
+              onClick={() => {
+                trackClick("button", "Close Call Modal", "call_modal", {
+                  action: "close_modal",
+                  modal_type: "call_request",
+                })
+                setShowCallMe(false)
+              }}
               className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors text-2xl leading-none"
             >
               ✕
@@ -1297,6 +1485,24 @@ export default function Home() {
             </div>
 
             <form onSubmit={handleCallMeSubmit} className="space-y-4">
+              {callError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {callError}
+                </div>
+              )}
+
+              {callSuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                  ✅ Call initiated! Movo will call you shortly.
+                </div>
+              )}
+
+              {isSubmittingCall && (
+                <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
+                  ⏳ Initiating call...
+                </div>
+              )}
+
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                   Name
@@ -1307,8 +1513,9 @@ export default function Home() {
                   placeholder="Jane Smith"
                   value={callMeForm.name}
                   onChange={(e) => setCallMeForm({ ...callMeForm, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   required
+                  disabled={isSubmittingCall}
                 />
               </div>
 
@@ -1322,8 +1529,9 @@ export default function Home() {
                   placeholder="jane@framer.com"
                   value={callMeForm.email}
                   onChange={(e) => setCallMeForm({ ...callMeForm, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   required
+                  disabled={isSubmittingCall}
                 />
               </div>
 
@@ -1337,8 +1545,9 @@ export default function Home() {
                   placeholder="000-000-0000"
                   value={callMeForm.phone}
                   onChange={(e) => setCallMeForm({ ...callMeForm, phone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   required
+                  disabled={isSubmittingCall}
                 />
               </div>
 
@@ -1348,7 +1557,8 @@ export default function Home() {
                   type="checkbox"
                   checked={callMeForm.newsletter}
                   onChange={(e) => setCallMeForm({ ...callMeForm, newsletter: e.target.checked })}
-                  className="mt-1 w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-2 focus:ring-teal-500/20"
+                  className="mt-1 w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-2 focus:ring-teal-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmittingCall}
                 />
                 <label htmlFor="newsletter" className="text-sm text-gray-600 leading-relaxed cursor-pointer">
                   I agree to get a call from Movo
@@ -1358,13 +1568,33 @@ export default function Home() {
               <div className="pt-2 pb-2">
                 <p className="text-xs text-gray-500 leading-relaxed font-thin">
                   By submitting your phone number above, you consent to the{" "}
-                  <a href="#" className="text-gray-700 underline hover:text-gray-900">
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      trackClick("link", "Mobile Terms", "call_modal", {
+                        link_type: "legal",
+                        context: "form_disclaimer",
+                      })
+                    }}
+                    className="text-gray-700 underline hover:text-gray-900"
+                  >
                     Mobile Terms
                   </a>{" "}
                   and to receive automated calls (including AI-generated calls) and texts from Movo AI at the number
                   provided. Message and data rates may apply. Frequency may vary. Reply STOP anytime to opt out of
                   texts. Consent is not a condition of purchase. See our{" "}
-                  <a href="#" className="text-gray-700 underline hover:text-gray-900">
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      trackClick("link", "Privacy Policy", "call_modal", {
+                        link_type: "legal",
+                        context: "form_disclaimer",
+                      })
+                    }}
+                    className="text-gray-700 underline hover:text-gray-900"
+                  >
                     Privacy Policy
                   </a>
                   .
@@ -1373,9 +1603,24 @@ export default function Home() {
 
               <button
                 type="submit"
-                className="w-full px-6 py-4 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-xl cursor-pointer"
+                disabled={isSubmittingCall}
+                className="w-full px-6 py-4 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Call me
+                {isSubmittingCall ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Initiating call...
+                  </>
+                ) : (
+                  "Call me"
+                )}
               </button>
             </form>
           </div>
@@ -1385,7 +1630,13 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="relative bg-white rounded-sm p-8 max-w-md w-full">
             <button
-              onClick={() => setShowHearMovo(false)}
+              onClick={() => {
+                trackClick("button", "Close Audio Modal", "audio_modal", {
+                  action: "close_modal",
+                  modal_type: "audio_demo",
+                })
+                setShowHearMovo(false)
+              }}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               ✕
@@ -1398,7 +1649,13 @@ export default function Home() {
               className="hidden"
             />
             <button
-              onClick={handlePlayAudio}
+              onClick={() => {
+                trackClick("button", `${isPlaying ? "Pause" : "Play"} Audio`, "audio_modal", {
+                  action: isPlaying ? "pause" : "play",
+                  media_type: "audio",
+                })
+                handlePlayAudio()
+              }}
               className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#D97948] hover:bg-[#C96838] text-white rounded-sm"
             >
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
