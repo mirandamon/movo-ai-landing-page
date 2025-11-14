@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { containsUnsafeLanguageInFields } from "@/lib/moderation"
+
 interface SlackNotificationPayload {
   call_id: string
   name: string
@@ -14,6 +16,23 @@ export async function POST(request: NextRequest) {
   try {
     const body: SlackNotificationPayload = await request.json()
     const { call_id, name, email, phone, email_domain, phone_country_code, first_name } = body
+
+    if (
+      containsUnsafeLanguageInFields([
+        call_id,
+        name,
+        email,
+        phone,
+        email_domain,
+        phone_country_code,
+        first_name,
+      ])
+    ) {
+      return NextResponse.json(
+        { error: "Notification blocked due to unsafe language" },
+        { status: 400 },
+      )
+    }
 
     const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL
 
