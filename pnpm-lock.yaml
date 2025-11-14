@@ -129,7 +129,7 @@ importers:
         specifier: latest
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       obscenity:
-        specifier: ^0.4.5
+        specifier: latest
         version: 0.4.5
       posthog-js:
         specifier: latest
