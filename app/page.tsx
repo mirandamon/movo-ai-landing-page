@@ -5,7 +5,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Phone, Play, Pause } from "lucide-react";
 import posthog from "posthog-js";
-import Header from "@/components/header";
+import { Header } from "@/components/header";
 import { ProblemSection } from "@/components/problem-section";
 import { WhoItsFor } from "@/components/who-its-for";
 import { HowItWorks } from "@/components/how-it-works";
