@@ -877,44 +877,7 @@ export default function Home() {
                 your best rep.
               </p>
 
-              <button
-                onClick={() => {
-                  trackClick("button", "Hear Movo learn in action", "product", {
-                    action: isLearnVideoPlaying ? "pause" : "play",
-                    media_type: "audio",
-                  });
-                  handleLearnVideoPlay();
-                }}
-                className="group flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm md:text-base font-medium rounded-sm transition-all duration-300 mb-8 hover:shadow-2xl hover:scale-105 cursor-pointer w-auto max-w-fit"
-              >
-                <div className="relative w-4 h-4 md:w-5 md:h-5 flex items-center justify-center flex-shrink-0">
-                  {isLearnVideoPlaying ? (
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="w-0.5 bg-white rounded-full animate-pulse"
-                        style={{ height: "10px", animationDelay: "0ms" }}
-                      ></div>
-                      <div
-                        className="w-0.5 bg-white rounded-full animate-pulse"
-                        style={{ height: "14px", animationDelay: "150ms" }}
-                      ></div>
-                      <div
-                        className="w-0.5 bg-white rounded-full animate-pulse"
-                        style={{ height: "8px", animationDelay: "300ms" }}
-                      ></div>
-                      <div
-                        className="w-0.5 bg-white rounded-full animate-pulse"
-                        style={{ height: "12px", animationDelay: "100ms" }}
-                      ></div>
-                    </div>
-                  ) : (
-                    <Play className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  )}
-                </div>
-                <span className="font-medium whitespace-nowrap text-sm">
-                  Hear Movo learn in action
-                </span>
-              </button>
+              
               <audio
                 ref={learnVideoRef}
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Nadav%20Vieder%20Video%20Nov%2011%202025-j07YSAJHlsf8TfJYGARpfwPwkjIzUn.mp3"
@@ -1443,42 +1406,7 @@ export default function Home() {
                 with no extra staff or marketing spend.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => {
-                    trackClick("button", "Hear Movo in Action", "stats", {
-                      action: isHeroAudioPlaying ? "pause" : "play",
-                      media_type: "audio",
-                    });
-                    handleHeroAudioPlay();
-                  }}
-                  className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
-                >
-                  <div className="relative w-6 h-6 flex items-center justify-center flex-shrink-0">
-                    {isHeroAudioPlaying ? (
-                      <div className="flex items-center gap-1">
-                        <div
-                          className="w-1 bg-white rounded-full animate-pulse"
-                          style={{ height: "16px", animationDelay: "0ms" }}
-                        ></div>
-                        <div
-                          className="w-1 bg-white rounded-full animate-pulse"
-                          style={{ height: "24px", animationDelay: "150ms" }}
-                        ></div>
-                        <div
-                          className="w-1 bg-white rounded-full animate-pulse"
-                          style={{ height: "14px", animationDelay: "300ms" }}
-                        ></div>
-                        <div
-                          className="w-1 bg-white rounded-full animate-pulse"
-                          style={{ height: "20px", animationDelay: "100ms" }}
-                        ></div>
-                      </div>
-                    ) : (
-                      <Play className="w-5 h-5" />
-                    )}
-                  </div>
-                  <span className="whitespace-nowrap">Hear Movo in Action</span>
-                </button>
+                
                 <a
                   href="https://calendly.com/ari-movoai/30min"
                   target="_blank"
