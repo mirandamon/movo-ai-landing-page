@@ -1180,10 +1180,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 md:p-6 relative overflow-hidden">
                     {/* Live stat badge */}
-                    <div className="absolute top-3 md:top-4 right-2 md:right-4 bg-green-500 text-white text-[10px] md:text-xs font-bold px-2 md:px-4 py-1.5 md:py-2 rounded-full shadow-lg flex items-center gap-1 md:gap-1.5 animate-pulse w-auto md:w-[240px] justify-center whitespace-nowrap">
-                      <span className="text-xs md:text-sm">💰</span>
-                      <span>+$2,300 booked</span>
-                    </div>
+                    
                     <div className="flex items-center justify-center mb-3 md:mb-4 mt-8 md:mt-6">
                       <div className="w-16 md:w-20 h-16 md:h-20 bg-gray-900 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <Phone className="w-8 md:w-10 h-8 md:h-10 text-white" />
@@ -1214,10 +1211,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 md:p-6 space-y-4 relative">
                     {/* Live stat badge */}
-                    <div className="absolute top-3 md:top-4 right-2 md:right-4 bg-purple-600 text-white text-[10px] md:text-xs font-bold px-2 md:px-4 py-1.5 md:py-2 rounded-full shadow-lg flex items-center gap-1 md:gap-1.5 w-auto md:w-[240px] justify-center whitespace-nowrap">
-                      <span className="text-xs md:text-sm">💬</span>
-                      <span>47% conversion</span>
-                    </div>
+                    
                     <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm mt-8 md:mt-6">
                       <div className="text-[10px] md:text-xs text-gray-500 mb-1.5 md:mb-2">
                         Text from Movo:
@@ -1273,10 +1267,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    <div className="absolute top-3 md:top-4 right-2 md:right-4 bg-orange-600 text-white text-[10px] md:text-xs font-bold px-2 md:px-4 py-1.5 md:py-2 rounded-full shadow-lg flex items-center gap-1 md:gap-1.5 w-auto md:w-[240px] justify-center whitespace-nowrap">
-                      <span className="text-xs md:text-sm">📈</span>
-                      <span>+85% fill rate</span>
-                    </div>
+                    
                     <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm mt-8 md:mt-6">
                       <div className="flex items-center justify-between mb-2 md:mb-3">
                         <div className="text-sm md:text-base font-semibold text-gray-900">
@@ -1321,10 +1312,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    <div className="absolute top-3 md:top-4 right-2 md:right-4 bg-indigo-600 text-white text-[10px] md:text-xs font-bold px-2 md:px-4 py-1.5 md:py-2 rounded-full shadow-lg flex items-center gap-1 md:gap-1.5 w-auto md:w-[240px] justify-center whitespace-nowrap">
-                      <span className="text-xs md:text-sm">🧠</span>
-                      <span>+72% lift</span>
-                    </div>
+                    
                     <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm mt-8 md:mt-6">
                       <div className="text-[10px] md:text-xs font-semibold text-gray-500 mb-1.5 md:mb-2">
                         Top Converting Offer
@@ -1370,9 +1358,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    <div className="absolute top-3 md:top-4 right-2 md:right-4 bg-teal-600 text-white text-[10px] md:text-xs font-bold px-2 md:px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap">
-                      ⚙️ 10+ hrs saved
-                    </div>
+                    
                     <div className="grid grid-cols-3 gap-2 md:gap-3 mt-8 md:mt-6">
                       <div className="bg-white p-2 md:p-3 rounded-lg shadow-sm text-center group-hover:scale-105 transition-transform">
                         <div className="text-xl md:text-2xl mb-0.5 md:mb-1">
