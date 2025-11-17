@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Geist } from 'next/font/google'
 import { Playfair_Display, Caveat } from 'next/font/google'
 import Script from "next/script"
+import { Suspense } from "react"
 import { PostHogProvider } from "@/components/posthog-provider"
 import "./globals.css"
 
@@ -77,9 +78,11 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${geistSans.variable} ${playfair.variable} ${caveat.variable} font-sans`}>
-        <PostHogProvider>
-          {children}
-        </PostHogProvider>
+        <Suspense fallback={null}>
+          <PostHogProvider>
+            {children}
+          </PostHogProvider>
+        </Suspense>
       </body>
     </html>
   )
