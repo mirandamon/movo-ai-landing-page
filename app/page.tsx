@@ -3,7 +3,8 @@
 import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
-import { Phone, Play, Pause } from 'lucide-react';
+import Script from "next/script";
+import { Phone, Play, Pause } from "lucide-react";
 import posthog from "posthog-js";
 import { Header } from "@/components/header";
 import { ProblemSection } from "@/components/problem-section";
@@ -107,6 +108,7 @@ export default function Home() {
     name: "",
     email: "",
     phone: "",
+    assistantId: "",
     newsletter: true,
   });
   const [isSubmittingCall, setIsSubmittingCall] = useState(false);
@@ -309,7 +311,12 @@ export default function Home() {
     setCallError(null);
     setCallSuccess(false);
 
-    const submittedText = [callMeForm.name, callMeForm.email, callMeForm.phone]
+    const submittedText = [
+      callMeForm.name,
+      callMeForm.email,
+      callMeForm.phone,
+      callMeForm.assistantId,
+    ]
       .filter(Boolean)
       .join(" ");
     if (containsUnsafeLanguage(submittedText)) {
@@ -326,6 +333,8 @@ export default function Home() {
     setIsSubmittingCall(true);
     setIsCallConnecting(true);
 
+    const assistantId = callMeForm.assistantId.trim();
+
     try {
       const response = await fetch("/api/create-call", {
         method: "POST",
@@ -336,6 +345,7 @@ export default function Home() {
           name: callMeForm.name,
           email: callMeForm.email,
           phone: callMeForm.phone,
+          ...(assistantId ? { assistantId } : {}),
         }),
       });
 
@@ -392,7 +402,13 @@ export default function Home() {
 
       setTimeout(() => {
         setIsCallActive(false);
-        setCallMeForm({ name: "", email: "", phone: "", newsletter: true });
+        setCallMeForm({
+          name: "",
+          email: "",
+          phone: "",
+          assistantId: "",
+          newsletter: true,
+        });
         setCallSuccess(false);
       }, 30000); // 30 seconds
     } catch (error) {
@@ -796,59 +812,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <button
-        onClick={() => {
-          if (isCallActive) {
-            setIsCallActive(false);
-            setShowCallMe(false);
-            setCallMeForm({ name: "", email: "", phone: "", newsletter: true });
-            trackClick("button", "End Call", "floating_cta", {
-              button_type: "floating",
-              action: "end_call",
-            });
-          } else {
-            trackClick("button", "Talk to Movo", "floating_cta", {
-              button_type: "floating",
-              action: "open_call_modal",
-            });
-            setShowCallMe(true);
-          }
-        }}
-        className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl transition-all duration-300 hover:scale-105 group cursor-pointer ${
-          isCallActive
-            ? "bg-white text-gray-900 border-4 border-blue-500"
-            : isCallConnecting
-            ? "bg-white text-gray-900 border-4 border-blue-500 animate-pulse"
-            : "bg-white text-gray-900 hover:shadow-3xl"
-        }`}
-      >
-        <div
-          className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
-            isCallActive
-              ? "bg-gradient-to-br from-red-400 to-red-600"
-              : "bg-gradient-to-br from-green-400 to-green-600"
-          }`}
-        >
-          <Phone
-            className={`w-4 h-4 sm:w-5 sm:h-5 text-white ${
-              isCallActive ? "animate-pulse" : ""
-            }`}
-          />
-          {!isCallActive && !isCallConnecting && (
-            <div className="absolute inset-0 rounded-lg bg-green-500 animate-ping opacity-40"></div>
-          )}
-          {isCallConnecting && (
-            <div className="absolute inset-0 rounded-lg border-2 border-blue-500 animate-spin"></div>
-          )}
-        </div>
-        <span className="text-sm sm:text-base font-semibold">
-          {isCallActive
-            ? "End call"
-            : isCallConnecting
-            ? "Connecting..."
-            : "Talk to Movo"}
-        </span>
-      </button>
       <section id="product" className="min-h-screen flex items-center">
         <div className="w-full grid lg:grid-cols-2">
           {/* Left side - White background with content */}
@@ -877,8 +840,6 @@ export default function Home() {
                 your best rep.
               </p>
 
-              
-              
               <audio
                 ref={learnVideoRef}
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Nadav%20Vieder%20Video%20Nov%2011%202025-j07YSAJHlsf8TfJYGARpfwPwkjIzUn.mp3"
@@ -1050,7 +1011,7 @@ export default function Home() {
                       <h4 className="text-xs sm:text-sm font-bold text-gray-900 mb-1.5 sm:mb-2">
                         Recent Conversations
                       </h4>
-                      <div className="bg-gray-50 rounded-lg p-2 sm:p-2.5 space-y-1.5 sm:space-2">
+                      <div className="bg-gray-50 rounded-lg p-2 sm:p-2.5 space-y-1.5 sm:space-y-2">
                         <div className="text-[10px] sm:text-xs text-gray-700">
                           <p>Hi Jessica! Yes, we have two options:</p>
                         </div>
@@ -1144,7 +1105,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 md:p-6 relative overflow-hidden">
                     {/* Live stat badge */}
-                    
+
                     <div className="flex items-center justify-center mb-3 md:mb-4 mt-8 md:mt-6">
                       <div className="w-16 md:w-20 h-16 md:h-20 bg-gray-900 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <Phone className="w-8 md:w-10 h-8 md:h-10 text-white" />
@@ -1175,7 +1136,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 md:p-6 space-y-4 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm mt-8 md:mt-6">
                       <div className="text-[10px] md:text-xs text-gray-500 mb-1.5 md:mb-2">
                         Text from Movo:
@@ -1231,7 +1192,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm mt-8 md:mt-6">
                       <div className="flex items-center justify-between mb-2 md:mb-3">
                         <div className="text-sm md:text-base font-semibold text-gray-900">
@@ -1276,7 +1237,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm mt-8 md:mt-6">
                       <div className="text-[10px] md:text-xs font-semibold text-gray-500 mb-1.5 md:mb-2">
                         Top Converting Offer
@@ -1322,7 +1283,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="grid grid-cols-3 gap-2 md:gap-3 mt-8 md:mt-6">
                       <div className="bg-white p-2 md:p-3 rounded-lg shadow-sm text-center group-hover:scale-105 transition-transform">
                         <div className="text-xl md:text-2xl mb-0.5 md:mb-1">
@@ -1407,8 +1368,6 @@ export default function Home() {
                 with no extra staff or marketing spend.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                
-                {/* </CHANGE> */}
                 <a
                   href="https://calendly.com/ari-movoai/30min"
                   target="_blank"
@@ -1727,6 +1686,29 @@ export default function Home() {
                 />
               </div>
 
+              <div>
+                <label
+                  htmlFor="assistantId"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Assistant ID (optional)
+                </label>
+                <input
+                  id="assistantId"
+                  type="text"
+                  placeholder="Leave blank to use the default assistant"
+                  value={callMeForm.assistantId}
+                  onChange={(e) =>
+                    setCallMeForm({
+                      ...callMeForm,
+                      assistantId: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmittingCall}
+                />
+              </div>
+
               <div className="flex items-start gap-3 pt-2">
                 <input
                   id="newsletter"
@@ -1881,6 +1863,37 @@ export default function Home() {
           </div>
         </div>
       )}
+      {/* Vapi call widget */}
+      {/* @ts-expect-error: custom element provided by external script */}
+      <vapi-widget
+        public-key="42e246dc-74d0-4145-9c99-07c17575f930"
+        assistant-id="1baa4c19-196c-4c3f-ba9e-821035d17853"
+        mode="voice"
+        theme="dark"
+        base-bg-color="#000000"
+        accent-color="#14B8A6"
+        cta-button-color="#000000"
+        cta-button-text-color="#ffffff"
+        border-radius="large"
+        size="full"
+        position="bottom-right"
+        title="Talk to Movo"
+        start-button-text="Start Call"
+        end-button-text="End Call"
+        cta-subtitle="Try a real chat now!"
+        chat-first-message="Hey, How can I help you today?"
+        chat-placeholder="Type your message..."
+        voice-show-transcript="true"
+        consent-required="true"
+        consent-title="Terms and conditions"
+        consent-content='By clicking "Agree," and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as otherwise described in our Terms of Service.'
+        consent-storage-key="vapi_widget_consent"
+      />
+      <Script
+        src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js"
+        strategy="afterInteractive"
+        async
+      />
     </>
   );
 }
