@@ -2227,8 +2227,41 @@ export default function Home() {
           </div>
         </div>
       )}
-      {/* Immersive web call panel (Vapi Web SDK) */}
-      {(isWebCallConnecting || isWebCallActive) && (
+      {/* Loading state while connecting */}
+      {isWebCallConnecting && !isWebCallActive && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white shadow-2xl border border-white/10 p-8 md:p-12">
+            <div className="flex flex-col items-center justify-center text-center space-y-6">
+              <div className="relative w-20 h-20 md:w-24 md:h-24">
+                {/* Loading spinner rings */}
+                <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
+                <div
+                  className="absolute inset-2 rounded-full border-4 border-transparent border-t-emerald-400 animate-spin"
+                  style={{ animationDuration: "1s" }}
+                />
+                <div
+                  className="absolute inset-4 rounded-full border-4 border-transparent border-t-teal-300 animate-spin"
+                  style={{
+                    animationDuration: "1.5s",
+                    animationDirection: "reverse",
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl md:text-2xl font-serif">
+                  Connecting to Movo...
+                </h3>
+                <p className="text-sm text-white/60">
+                  Please wait while we set up your call
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Immersive web call panel (Vapi Web SDK) - only shown when call is active */}
+      {isWebCallActive && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-xl rounded-3xl bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white shadow-2xl border border-white/10 p-6 md:p-8">
             <div className="flex items-center justify-between mb-4">
@@ -2241,15 +2274,9 @@ export default function Home() {
                 </h2>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <span
-                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${
-                    isWebCallActive
-                      ? "bg-emerald-500/10 text-emerald-400"
-                      : "bg-amber-500/10 text-amber-300"
-                  }`}
-                >
+                <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                  {isWebCallActive ? "On call" : "Connecting"}
+                  On call
                 </span>
                 <span className="text-[11px] text-white/40">
                   {vapiUserInfo.email}
@@ -2259,9 +2286,7 @@ export default function Home() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr,1fr]">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
-                  Voice activity
-                </p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/50"></p>
                 <div className="relative h-40 md:h-48 flex items-center justify-center">
                   <div className="relative w-32 h-32 md:w-40 md:h-40">
                     {/* Outer pulsing ring */}
