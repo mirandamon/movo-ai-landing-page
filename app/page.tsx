@@ -3,7 +3,6 @@
 import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
-import Script from "next/script";
 import { Phone, Play, Pause } from "lucide-react";
 import posthog from "posthog-js";
 import { Header } from "@/components/header";
@@ -26,6 +25,28 @@ export default function Home() {
 
   const [isCallConnecting, setIsCallConnecting] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
+
+  // Web call via Vapi Web SDK
+  const [isWebCallConnecting, setIsWebCallConnecting] = useState(false);
+  const [isWebCallActive, setIsWebCallActive] = useState(false);
+  const [webCallError, setWebCallError] = useState<string | null>(null);
+  const [webTranscripts, setWebTranscripts] = useState<
+    { role: string; text: string; id: number }[]
+  >([]);
+  const vapiRef = useRef<any | null>(null);
+  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
+  const assistantSpeakingTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  // Prefill info before allowing Vapi widget usage
+  const [showVapiPrefill, setShowVapiPrefill] = useState(false);
+  const [hasVapiAccess, setHasVapiAccess] = useState(false);
+  const [vapiUserInfo, setVapiUserInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
 
   const trackClick = (
     elementType: string,
@@ -114,6 +135,84 @@ export default function Home() {
   const [isSubmittingCall, setIsSubmittingCall] = useState(false);
   const [callError, setCallError] = useState<string | null>(null);
   const [callSuccess, setCallSuccess] = useState(false);
+
+  // Lazy-load Vapi Web SDK on client
+  useEffect(() => {
+    let mounted = true;
+
+    async function initVapi() {
+      if (typeof window === "undefined") return;
+      try {
+        const { default: Vapi } = await import("@vapi-ai/web");
+        if (!mounted) return;
+
+        const vapi = new Vapi("42e246dc-74d0-4145-9c99-07c17575f930");
+        vapiRef.current = vapi;
+
+        vapi.on("call-start", () => {
+          setIsWebCallConnecting(false);
+          setIsWebCallActive(true);
+        });
+
+        vapi.on("call-end", () => {
+          setIsWebCallActive(false);
+          setIsWebCallConnecting(false);
+          setHasVapiAccess(false);
+        });
+
+        vapi.on("error", (error: any) => {
+          console.error("[Vapi] Web call error:", error);
+          setWebCallError(
+            error?.message || "Something went wrong with the call."
+          );
+          setIsWebCallActive(false);
+          setIsWebCallConnecting(false);
+        });
+
+        vapi.on("transcript" as any, (data: any) => {
+          if (!data?.transcript) return;
+          setWebTranscripts((prev) => [
+            ...prev,
+            {
+              role: data.role || "assistant",
+              text: data.transcript,
+              id: Date.now() + Math.random(),
+            },
+          ]);
+
+          // Drive assistant speaking animation
+          const isAssistant = (data.role || "assistant") !== "user";
+          if (isAssistant) {
+            setIsAssistantSpeaking(true);
+            if (assistantSpeakingTimeoutRef.current) {
+              clearTimeout(assistantSpeakingTimeoutRef.current);
+            }
+            assistantSpeakingTimeoutRef.current = setTimeout(() => {
+              setIsAssistantSpeaking(false);
+            }, 900);
+          }
+        });
+      } catch (err) {
+        console.error("[Vapi] Failed to initialize Web SDK:", err);
+        setWebCallError(
+          "Unable to initialize the call experience. Please try again later."
+        );
+      }
+    }
+
+    void initVapi();
+
+    return () => {
+      mounted = false;
+      try {
+        if (vapiRef.current) {
+          vapiRef.current.stop?.();
+        }
+      } catch {
+        // ignore cleanup errors
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -421,6 +520,96 @@ export default function Home() {
       setIsCallActive(false);
     } finally {
       setIsSubmittingCall(false);
+    }
+  };
+
+  const handleVapiPrefillSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vapiUserInfo.name || !vapiUserInfo.email || !vapiUserInfo.phone) {
+      return;
+    }
+
+    setWebCallError(null);
+    setIsWebCallConnecting(true);
+
+    setHasVapiAccess(true);
+    setShowVapiPrefill(false);
+
+    // Fire Slack webhook similar to old call flow
+    const emailDomain = vapiUserInfo.email.split("@")[1] || "unknown";
+    let phoneCountryCode = "+1";
+    const cleanedPhone = vapiUserInfo.phone.replace(/[^\d+]/g, "");
+    if (cleanedPhone.startsWith("+")) {
+      const match = cleanedPhone.match(/^\+(\d{1,3})/);
+      if (match) {
+        phoneCountryCode = `+${match[1]}`;
+      }
+    } else if (cleanedPhone.startsWith("1") && cleanedPhone.length >= 11) {
+      phoneCountryCode = "+1";
+    }
+
+    const firstName = vapiUserInfo.name.trim().split(" ")[0] || "";
+
+    fetch("/api/notify-slack", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        call_id: `vapi-prefill-${Date.now()}`,
+        name: vapiUserInfo.name,
+        email: vapiUserInfo.email,
+        phone: vapiUserInfo.phone,
+        email_domain: emailDomain,
+        phone_country_code: phoneCountryCode,
+        first_name: firstName,
+      }),
+    }).catch((error) => {
+      console.error(
+        "Failed to send Slack notification for Vapi prefill:",
+        error
+      );
+    });
+
+    // Start web call via Vapi Web SDK with assistant overrides
+    try {
+      if (!vapiRef.current) {
+        console.error(
+          "[Vapi] Web SDK instance not available when starting call"
+        );
+        setWebCallError(
+          "Unable to start the call. Please refresh the page and try again."
+        );
+        setIsWebCallConnecting(false);
+        setIsWebCallActive(false);
+        setHasVapiAccess(false);
+        return;
+      }
+
+      vapiRef.current
+        .start("1baa4c19-196c-4c3f-ba9e-821035d17853", {
+          variableValues: {
+            first_name: firstName,
+            email_address: vapiUserInfo.email,
+          },
+        })
+        .catch((error: any) => {
+          console.error("[Vapi] Error starting web call:", error);
+          setWebCallError(
+            error?.message || "Unable to start the call. Please try again."
+          );
+          setIsWebCallConnecting(false);
+          setIsWebCallActive(false);
+          setHasVapiAccess(false);
+        });
+    } catch (error: any) {
+      console.error("[Vapi] Error starting web call:", error);
+      setWebCallError(
+        error?.message || "Unable to start the call. Please try again."
+      );
+      setIsWebCallConnecting(false);
+      setIsWebCallActive(false);
+      setHasVapiAccess(false);
     }
   };
 
@@ -812,6 +1001,23 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* Minimal pre-call entrypoint for the Vapi widget */}
+      {!hasVapiAccess && (
+        <button
+          onClick={() => {
+            trackClick("button", "Open Vapi Prefill", "vapi_prefill", {
+              source: "floating_pill",
+            });
+            setShowVapiPrefill(true);
+          }}
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-black/80 text-white px-5 py-3 text-sm shadow-lg backdrop-blur-sm hover:bg-black transition-colors cursor-pointer"
+        >
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold">
+            ✦
+          </span>
+          <span className="font-medium">Talk to Movo</span>
+        </button>
+      )}
       <section id="product" className="min-h-screen flex items-center">
         <div className="w-full grid lg:grid-cols-2">
           {/* Left side - White background with content */}
@@ -1863,37 +2069,219 @@ export default function Home() {
           </div>
         </div>
       )}
-      {/* Vapi call widget */}
-      {/* @ts-expect-error: custom element provided by external script */}
-      <vapi-widget
-        public-key="42e246dc-74d0-4145-9c99-07c17575f930"
-        assistant-id="1baa4c19-196c-4c3f-ba9e-821035d17853"
-        mode="voice"
-        theme="dark"
-        base-bg-color="#000000"
-        accent-color="#14B8A6"
-        cta-button-color="#000000"
-        cta-button-text-color="#ffffff"
-        border-radius="large"
-        size="full"
-        position="bottom-right"
-        title="Talk to Movo"
-        start-button-text="Start Call"
-        end-button-text="End Call"
-        cta-subtitle="Try a real chat now!"
-        chat-first-message="Hey, How can I help you today?"
-        chat-placeholder="Type your message..."
-        voice-show-transcript="true"
-        consent-required="true"
-        consent-title="Terms and conditions"
-        consent-content='By clicking "Agree," and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as otherwise described in our Terms of Service.'
-        consent-storage-key="vapi_widget_consent"
-      />
-      <Script
-        src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js"
-        strategy="afterInteractive"
-        async
-      />
+      {/* Vapi pre-call form modal */}
+      {showVapiPrefill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl">
+            <button
+              onClick={() => setShowVapiPrefill(false)}
+              className="absolute right-5 top-5 text-gray-400 hover:text-gray-700"
+            >
+              ✕
+            </button>
+            <div className="mb-6 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+                Before you start
+              </p>
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Share a few details
+              </h2>
+              <p className="text-sm text-gray-500">
+                We&apos;ll use this so Movo can personalize the conversation.
+              </p>
+            </div>
+            <form onSubmit={handleVapiPrefillSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="vapi-name"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500"
+                >
+                  Name
+                </label>
+                <input
+                  id="vapi-name"
+                  type="text"
+                  value={vapiUserInfo.name}
+                  onChange={(e) =>
+                    setVapiUserInfo({ ...vapiUserInfo, name: e.target.value })
+                  }
+                  placeholder="Alex Johnson"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/5"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="vapi-email"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500"
+                >
+                  Email
+                </label>
+                <input
+                  id="vapi-email"
+                  type="email"
+                  value={vapiUserInfo.email}
+                  onChange={(e) =>
+                    setVapiUserInfo({ ...vapiUserInfo, email: e.target.value })
+                  }
+                  placeholder="you@academy.com"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/5"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="vapi-phone"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500"
+                >
+                  Phone
+                </label>
+                <input
+                  id="vapi-phone"
+                  type="tel"
+                  value={vapiUserInfo.phone}
+                  onChange={(e) =>
+                    setVapiUserInfo({ ...vapiUserInfo, phone: e.target.value })
+                  }
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/5"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-lg shadow-black/10 transition hover:bg-black/90"
+              >
+                Continue to call
+              </button>
+              <p className="text-xs text-gray-400">
+                By continuing you consent to being contacted about Movo AI and
+                agree to our{" "}
+                <a
+                  href="/privacy"
+                  className="underline decoration-gray-300 underline-offset-4 hover:text-gray-600"
+                >
+                  Privacy Policy
+                </a>
+                .
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Immersive web call panel (Vapi Web SDK) */}
+      {(isWebCallConnecting || isWebCallActive) && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-xl rounded-3xl bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white shadow-2xl border border-white/10 p-6 md:p-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-400/80">
+                  Live with Movo
+                </p>
+                <h2 className="mt-1 text-2xl md:text-3xl font-serif">
+                  Talking to your AI rep
+                </h2>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${
+                    isWebCallActive
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-amber-500/10 text-amber-300"
+                  }`}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                  {isWebCallActive ? "On call" : "Connecting"}
+                </span>
+                <span className="text-[11px] text-white/40">
+                  {vapiUserInfo.email}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr,1fr]">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+                  Voice activity
+                </p>
+                <div className="relative h-40 md:h-48 flex items-center justify-center">
+                  <div className="relative w-32 h-32 md:w-40 md:h-40">
+                    {/* Outer pulsing ring */}
+                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-pulse-ring" />
+                    {/* Middle morphing ring */}
+                    <div className="absolute inset-2 rounded-full border-2 border-teal-400/60 animate-morph-ring" />
+                    {/* Inner pulsing circle */}
+                    <div className="absolute inset-4 rounded-full bg-gradient-to-br from-emerald-500/30 via-teal-300/40 to-emerald-400/30 animate-pulse-core" />
+                    {/* Center glow */}
+                    <div className="absolute inset-8 rounded-full bg-emerald-400/20 blur-sm animate-glow-pulse-ring" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+                    Caller
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-sm font-semibold text-black">
+                      {vapiUserInfo.name
+                        ? vapiUserInfo.name.charAt(0).toUpperCase()
+                        : "M"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {vapiUserInfo.name || "New lead"}
+                      </p>
+                      <p className="text-xs text-white/60">
+                        {vapiUserInfo.phone || "Live web call"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full w-full origin-left animate-[pulse_1.4s_ease-in-out_infinite] bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500" />
+                  </div>
+                  {webCallError && (
+                    <p className="text-xs text-rose-300">{webCallError}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => {
+                      try {
+                        vapiRef.current?.setMuted?.(
+                          !vapiRef.current?.isMuted?.()
+                        );
+                      } catch {
+                        // ignore
+                      }
+                    }}
+                    className="flex-1 rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10 transition"
+                  >
+                    Mute / Unmute
+                  </button>
+                  <button
+                    onClick={() => {
+                      try {
+                        vapiRef.current?.stop?.();
+                      } catch {
+                        // ignore
+                      }
+                      setIsWebCallActive(false);
+                      setIsWebCallConnecting(false);
+                      setHasVapiAccess(false);
+                    }}
+                    className="flex-1 rounded-full bg-white text-black px-3 py-2 text-xs font-semibold shadow-lg hover:bg-gray-100 transition"
+                  >
+                    End call
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
