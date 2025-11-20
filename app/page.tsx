@@ -115,6 +115,7 @@ export default function Home() {
     email: "",
     phone: "",
   });
+  const [vapiConsentChecked, setVapiConsentChecked] = useState(false);
 
   const trackClick = (
     elementType: string,
@@ -646,7 +647,12 @@ export default function Home() {
 
   const handleVapiPrefillSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vapiUserInfo.name || !vapiUserInfo.email || !vapiUserInfo.phone) {
+    if (
+      !vapiUserInfo.name ||
+      !vapiUserInfo.email ||
+      !vapiUserInfo.phone ||
+      !vapiConsentChecked
+    ) {
       return;
     }
 
@@ -655,6 +661,7 @@ export default function Home() {
 
     setHasVapiAccess(true);
     setShowVapiPrefill(false);
+    setVapiConsentChecked(false);
 
     // Fire Slack webhook similar to old call flow
     const emailDomain = vapiUserInfo.email.split("@")[1] || "unknown";
@@ -1993,8 +2000,11 @@ export default function Home() {
 
           <div className="text-center pt-8 border-t border-gray-200">
             <p className="text-sm text-gray-600 leading-relaxed max-w-3xl mx-auto">
-              By submitting your phone number above, you consent to the Mobile Terms and to receive automated calls (including AI-generated calls) and texts from Movo AI at the number provided. Message and data rates may apply. Frequency may vary. Reply STOP anytime to opt out of texts. Consent is not a condition of purchase. 
-              {" "}
+              By submitting your phone number above, you consent to the Mobile
+              Terms and to receive automated calls (including AI-generated
+              calls) and texts from Movo AI at the number provided. Message and
+              data rates may apply. Frequency may vary. Reply STOP anytime to
+              opt out of texts. Consent is not a condition of purchase.{" "}
               <a
                 href="/privacy"
                 onClick={() =>
@@ -2303,7 +2313,10 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl">
             <button
-              onClick={() => setShowVapiPrefill(false)}
+              onClick={() => {
+                setShowVapiPrefill(false);
+                setVapiConsentChecked(false);
+              }}
               className="absolute right-5 top-5 text-gray-400 hover:text-gray-700"
             >
               ✕
@@ -2377,33 +2390,47 @@ export default function Home() {
                   required
                 />
               </div>
+              <div className="flex items-start gap-3">
+                <input
+                  id="vapi-consent"
+                  type="checkbox"
+                  checked={vapiConsentChecked}
+                  onChange={(e) => setVapiConsentChecked(e.target.checked)}
+                  required
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-black focus:ring-2 focus:ring-black/20 cursor-pointer"
+                />
+                <label
+                  htmlFor="vapi-consent"
+                  className="text-xs text-gray-400 leading-relaxed cursor-pointer"
+                >
+                  I agree to receive automated SMS messages from Movo AI related
+                  to my inquiry or reservation. Message and data rates may
+                  apply. Frequency varies. Reply STOP to opt out or HELP for
+                  help. Consent is not a condition of purchase. You also agree
+                  to our{" "}
+                  <a
+                    href="/privacy"
+                    className="underline decoration-gray-300 underline-offset-4 hover:text-gray-600"
+                  >
+                    Privacy Policy
+                  </a>{" "}
+                  and our{" "}
+                  <a
+                    href="/terms"
+                    className="underline decoration-gray-300 underline-offset-4 hover:text-gray-600"
+                  >
+                    Terms of Service
+                  </a>
+                  .
+                </label>
+              </div>
               <button
                 type="submit"
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-lg shadow-black/10 transition hover:bg-black/90"
+                disabled={!vapiConsentChecked}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-lg shadow-black/10 transition hover:bg-black/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue to call
               </button>
-              <p className="text-xs text-gray-400">
-                By submitting this form, you consent to receive automated SMS
-                messages from Movo AI related to my inquiry or reservation.
-                Message and data rates may apply. Frequency varies. Reply STOP
-                to opt out or HELP for help. Consent is not a condition of
-                purchase. You also agree to our{" "}
-                <a
-                  href="/privacy"
-                  className="underline decoration-gray-300 underline-offset-4 hover:text-gray-600"
-                >
-                  Privacy Policy
-                </a>{" "}
-                and our{" "}
-                <a
-                  href="/terms"
-                  className="underline decoration-gray-300 underline-offset-4 hover:text-gray-600"
-                >
-                  Terms of Service
-                </a>
-                .
-              </p>
             </form>
           </div>
         </div>
