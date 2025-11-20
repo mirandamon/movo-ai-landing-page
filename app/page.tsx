@@ -42,6 +42,71 @@ export default function Home() {
     typeof setTimeout
   > | null>(null);
 
+  // Normalize error messages to be human-readable
+  const normalizeCallError = (error: any): string => {
+    if (!error) {
+      return "Unable to start the call. Please try again.";
+    }
+
+    const errorMessage = error?.message || error?.toString() || "";
+    const errorString = errorMessage.toLowerCase();
+
+    // Network/connection errors
+    if (
+      errorString.includes("network") ||
+      errorString.includes("fetch") ||
+      errorString.includes("connection") ||
+      errorString.includes("failed to fetch")
+    ) {
+      return "Connection failed. Please check your internet connection and try again.";
+    }
+
+    // Permission/access errors
+    if (
+      errorString.includes("permission") ||
+      errorString.includes("access") ||
+      errorString.includes("unauthorized") ||
+      errorString.includes("forbidden")
+    ) {
+      return "Unable to access your microphone. Please check your browser permissions and try again.";
+    }
+
+    // SDK/initialization errors
+    if (
+      errorString.includes("sdk") ||
+      errorString.includes("not available") ||
+      errorString.includes("not initialized")
+    ) {
+      return "Unable to initialize the call. Please refresh the page and try again.";
+    }
+
+    // Timeout errors
+    if (errorString.includes("timeout") || errorString.includes("timed out")) {
+      return "The call took too long to connect. Please try again.";
+    }
+
+    // Rate limiting
+    if (
+      errorString.includes("rate limit") ||
+      errorString.includes("too many requests")
+    ) {
+      return "Too many requests. Please wait a moment and try again.";
+    }
+
+    // Generic API errors
+    if (
+      errorString.includes("bad request") ||
+      errorString.includes("400") ||
+      errorString.includes("500") ||
+      errorString.includes("server error")
+    ) {
+      return "Something went wrong on our end. Please try again in a moment.";
+    }
+
+    // Default fallback
+    return "Unable to start the call. Please try again.";
+  };
+
   // Prefill info before allowing Vapi widget usage
   const [showVapiPrefill, setShowVapiPrefill] = useState(false);
   const [hasVapiAccess, setHasVapiAccess] = useState(false);
@@ -162,13 +227,12 @@ export default function Home() {
           setIsWebCallActive(false);
           setIsWebCallConnecting(false);
           setHasVapiAccess(false);
+          setWebCallError(null);
         };
 
         const handleError = (error: any) => {
           console.error("[Vapi] Web call error:", error);
-          setWebCallError(
-            error?.message || "Something went wrong with the call."
-          );
+          setWebCallError(normalizeCallError(error));
           setIsWebCallActive(false);
           setIsWebCallConnecting(false);
         };
@@ -634,9 +698,7 @@ export default function Home() {
         console.error(
           "[Vapi] Web SDK instance not available when starting call"
         );
-        setWebCallError(
-          "Unable to start the call. Please refresh the page and try again."
-        );
+        setWebCallError(normalizeCallError({ message: "SDK not available" }));
         setIsWebCallConnecting(false);
         setIsWebCallActive(false);
         setHasVapiAccess(false);
@@ -652,18 +714,14 @@ export default function Home() {
         })
         .catch((error: any) => {
           console.error("[Vapi] Error starting web call:", error);
-          setWebCallError(
-            error?.message || "Unable to start the call. Please try again."
-          );
+          setWebCallError(normalizeCallError(error));
           setIsWebCallConnecting(false);
           setIsWebCallActive(false);
           setHasVapiAccess(false);
         });
     } catch (error: any) {
       console.error("[Vapi] Error starting web call:", error);
-      setWebCallError(
-        error?.message || "Unable to start the call. Please try again."
-      );
+      setWebCallError(normalizeCallError(error));
       setIsWebCallConnecting(false);
       setIsWebCallActive(false);
       setHasVapiAccess(false);
@@ -1060,22 +1118,135 @@ export default function Home() {
         </div>
       </section>
       {/* Minimal pre-call entrypoint for the Vapi widget */}
-      {!hasVapiAccess && (
+      {/* Floating call button - shows different states */}
+      {(hasVapiAccess ||
+        isWebCallConnecting ||
+        isWebCallActive ||
+        webCallError) && (
         <button
           onClick={() => {
-            trackClick("button", "Open Vapi Prefill", "vapi_prefill", {
-              source: "floating_pill",
-            });
-            setShowVapiPrefill(true);
+            if (isWebCallActive) {
+              // End call
+              try {
+                vapiRef.current?.stop?.();
+              } catch {
+                // ignore
+              }
+              setIsWebCallActive(false);
+              setIsWebCallConnecting(false);
+              setHasVapiAccess(false);
+              setWebCallError(null);
+            } else if (isWebCallConnecting) {
+              // Cancel connecting
+              try {
+                vapiRef.current?.stop?.();
+              } catch {
+                // ignore
+              }
+              setIsWebCallConnecting(false);
+              setIsWebCallActive(false);
+              setHasVapiAccess(false);
+              setWebCallError(null);
+            } else if (webCallError) {
+              // Retry - open prefill form again
+              setWebCallError(null);
+              setHasVapiAccess(false);
+              setShowVapiPrefill(true);
+            }
           }}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-black/80 text-white px-5 py-3 text-sm shadow-lg backdrop-blur-sm hover:bg-black transition-colors cursor-pointer"
+          className={`fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-5 py-3 text-sm shadow-lg backdrop-blur-sm transition-colors cursor-pointer ${
+            webCallError && !isWebCallActive
+              ? "bg-rose-500/90 hover:bg-rose-600 text-white"
+              : isWebCallActive
+              ? "bg-rose-500/90 hover:bg-rose-600 text-white"
+              : "bg-black/80 hover:bg-black text-white"
+          }`}
         >
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold">
-            ✦
-          </span>
-          <span className="font-medium">Talk to Movo</span>
+          {isWebCallActive ? (
+            <>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-semibold">
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </span>
+              <span className="font-medium">End call</span>
+            </>
+          ) : isWebCallConnecting ? (
+            <>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-semibold">
+                <svg
+                  className="w-3 h-3 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              </span>
+              <span className="font-medium">Connecting...</span>
+            </>
+          ) : webCallError ? (
+            <>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-semibold">
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </span>
+              <span className="font-medium">Retry</span>
+            </>
+          ) : null}
         </button>
       )}
+      {!hasVapiAccess &&
+        !isWebCallConnecting &&
+        !isWebCallActive &&
+        !webCallError && (
+          <button
+            onClick={() => {
+              trackClick("button", "Open Vapi Prefill", "vapi_prefill", {
+                source: "floating_pill",
+              });
+              setShowVapiPrefill(true);
+            }}
+            className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-black/80 text-white px-5 py-3 text-sm shadow-lg backdrop-blur-sm hover:bg-black transition-colors cursor-pointer"
+          >
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold">
+              ✦
+            </span>
+            <span className="font-medium">Talk to Movo</span>
+          </button>
+        )}
       <section id="product" className="min-h-screen flex items-center">
         <div className="w-full grid lg:grid-cols-2">
           {/* Left side - White background with content */}
@@ -1702,10 +1873,11 @@ export default function Home() {
             <button
               onClick={() => {
                 trackClick("button", "Call Me", "final_cta", {
-                  action: "open_call_modal",
+                  action: "open_vapi_prefill",
                   cta_type: "primary",
+                  source: "final_cta",
                 });
-                setShowCallMe(true);
+                setShowVapiPrefill(true);
               }}
               className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
             >
@@ -2227,141 +2399,48 @@ export default function Home() {
           </div>
         </div>
       )}
-      {/* Loading state while connecting */}
-      {isWebCallConnecting && !isWebCallActive && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white shadow-2xl border border-white/10 p-8 md:p-12">
-            <div className="flex flex-col items-center justify-center text-center space-y-6">
-              <div className="relative w-20 h-20 md:w-24 md:h-24">
-                {/* Loading spinner rings */}
-                <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
-                <div
-                  className="absolute inset-2 rounded-full border-4 border-transparent border-t-emerald-400 animate-spin"
-                  style={{ animationDuration: "1s" }}
+      {/* Error notification toast */}
+      {webCallError && !isWebCallActive && !isWebCallConnecting && (
+        <div className="fixed bottom-24 right-6 z-50 max-w-sm rounded-lg bg-rose-500/90 text-white px-4 py-3 text-sm shadow-lg backdrop-blur-sm border border-rose-400/20">
+          <div className="flex items-start gap-3">
+            <svg
+              className="w-5 h-5 flex-shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div className="flex-1">
+              <p className="font-medium mb-1">Call Failed</p>
+              <p className="text-white/90 text-xs">{webCallError}</p>
+            </div>
+            <button
+              onClick={() => {
+                setWebCallError(null);
+                setHasVapiAccess(false);
+              }}
+              className="text-white/80 hover:text-white transition"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
                 />
-                <div
-                  className="absolute inset-4 rounded-full border-4 border-transparent border-t-teal-300 animate-spin"
-                  style={{
-                    animationDuration: "1.5s",
-                    animationDirection: "reverse",
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl md:text-2xl font-serif">
-                  Connecting to Movo...
-                </h3>
-                <p className="text-sm text-white/60">
-                  Please wait while we set up your call
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Immersive web call panel (Vapi Web SDK) - only shown when call is active */}
-      {isWebCallActive && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-xl rounded-3xl bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white shadow-2xl border border-white/10 p-6 md:p-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-400/80">
-                  Live with Movo
-                </p>
-                <h2 className="mt-1 text-2xl md:text-3xl font-serif">
-                  Talking to your AI rep
-                </h2>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                  On call
-                </span>
-                <span className="text-[11px] text-white/40">
-                  {vapiUserInfo.email}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr,1fr]">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/50"></p>
-                <div className="relative h-40 md:h-48 flex items-center justify-center">
-                  <div className="relative w-32 h-32 md:w-40 md:h-40">
-                    {/* Outer pulsing ring */}
-                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-pulse-ring" />
-                    {/* Middle morphing ring */}
-                    <div className="absolute inset-2 rounded-full border-2 border-teal-400/60 animate-morph-ring" />
-                    {/* Inner pulsing circle */}
-                    <div className="absolute inset-4 rounded-full bg-gradient-to-br from-emerald-500/30 via-teal-300/40 to-emerald-400/30 animate-pulse-core" />
-                    {/* Center glow */}
-                    <div className="absolute inset-8 rounded-full bg-emerald-400/20 blur-sm animate-glow-pulse-ring" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col justify-between gap-4">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
-                    Caller
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-sm font-semibold text-black">
-                      {vapiUserInfo.name
-                        ? vapiUserInfo.name.charAt(0).toUpperCase()
-                        : "M"}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {vapiUserInfo.name || "New lead"}
-                      </p>
-                      <p className="text-xs text-white/60">
-                        {vapiUserInfo.phone || "Live web call"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full w-full origin-left animate-[pulse_1.4s_ease-in-out_infinite] bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500" />
-                  </div>
-                  {webCallError && (
-                    <p className="text-xs text-rose-300">{webCallError}</p>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between gap-3">
-                  <button
-                    onClick={() => {
-                      try {
-                        vapiRef.current?.setMuted?.(
-                          !vapiRef.current?.isMuted?.()
-                        );
-                      } catch {
-                        // ignore
-                      }
-                    }}
-                    className="flex-1 rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10 transition"
-                  >
-                    Mute / Unmute
-                  </button>
-                  <button
-                    onClick={() => {
-                      try {
-                        vapiRef.current?.stop?.();
-                      } catch {
-                        // ignore
-                      }
-                      setIsWebCallActive(false);
-                      setIsWebCallConnecting(false);
-                      setHasVapiAccess(false);
-                    }}
-                    className="flex-1 rounded-full bg-white text-black px-3 py-2 text-xs font-semibold shadow-lg hover:bg-gray-100 transition"
-                  >
-                    End call
-                  </button>
-                </div>
-              </div>
-            </div>
+              </svg>
+            </button>
           </div>
         </div>
       )}
