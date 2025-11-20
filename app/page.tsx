@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
-import { Phone, Play, Pause } from 'lucide-react';
+import { Phone, Play, Pause } from "lucide-react";
 import posthog from "posthog-js";
 import { Header } from "@/components/header";
 import { ProblemSection } from "@/components/problem-section";
@@ -25,6 +25,96 @@ export default function Home() {
 
   const [isCallConnecting, setIsCallConnecting] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
+
+  // Web call via Vapi Web SDK
+  const [isWebCallConnecting, setIsWebCallConnecting] = useState(false);
+  const [isWebCallActive, setIsWebCallActive] = useState(false);
+  const [webCallError, setWebCallError] = useState<string | null>(null);
+  const [webTranscripts, setWebTranscripts] = useState<
+    { role: string; text: string; id: number }[]
+  >([]);
+  const vapiRef = useRef<any | null>(null);
+  const vapiEventHandlersRef = useRef<
+    { event: string; handler: (...args: any[]) => void }[]
+  >([]);
+  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
+  const assistantSpeakingTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  // Normalize error messages to be human-readable
+  const normalizeCallError = (error: any): string => {
+    if (!error) {
+      return "Unable to start the call. Please try again.";
+    }
+
+    const errorMessage = error?.message || error?.toString() || "";
+    const errorString = errorMessage.toLowerCase();
+
+    // Network/connection errors
+    if (
+      errorString.includes("network") ||
+      errorString.includes("fetch") ||
+      errorString.includes("connection") ||
+      errorString.includes("failed to fetch")
+    ) {
+      return "Connection failed. Please check your internet connection and try again.";
+    }
+
+    // Permission/access errors
+    if (
+      errorString.includes("permission") ||
+      errorString.includes("access") ||
+      errorString.includes("unauthorized") ||
+      errorString.includes("forbidden")
+    ) {
+      return "Unable to access your microphone. Please check your browser permissions and try again.";
+    }
+
+    // SDK/initialization errors
+    if (
+      errorString.includes("sdk") ||
+      errorString.includes("not available") ||
+      errorString.includes("not initialized")
+    ) {
+      return "Unable to initialize the call. Please refresh the page and try again.";
+    }
+
+    // Timeout errors
+    if (errorString.includes("timeout") || errorString.includes("timed out")) {
+      return "The call took too long to connect. Please try again.";
+    }
+
+    // Rate limiting
+    if (
+      errorString.includes("rate limit") ||
+      errorString.includes("too many requests")
+    ) {
+      return "Too many requests. Please wait a moment and try again.";
+    }
+
+    // Generic API errors
+    if (
+      errorString.includes("bad request") ||
+      errorString.includes("400") ||
+      errorString.includes("500") ||
+      errorString.includes("server error")
+    ) {
+      return "Something went wrong on our end. Please try again in a moment.";
+    }
+
+    // Default fallback
+    return "Unable to start the call. Please try again.";
+  };
+
+  // Prefill info before allowing Vapi widget usage
+  const [showVapiPrefill, setShowVapiPrefill] = useState(false);
+  const [hasVapiAccess, setHasVapiAccess] = useState(false);
+  const [vapiUserInfo, setVapiUserInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
 
   const trackClick = (
     elementType: string,
@@ -107,11 +197,143 @@ export default function Home() {
     name: "",
     email: "",
     phone: "",
+    assistantId: "",
     newsletter: true,
   });
   const [isSubmittingCall, setIsSubmittingCall] = useState(false);
   const [callError, setCallError] = useState<string | null>(null);
   const [callSuccess, setCallSuccess] = useState(false);
+
+  // Lazy-load Vapi Web SDK on client
+  useEffect(() => {
+    let mounted = true;
+
+    async function initVapi() {
+      if (typeof window === "undefined") return;
+      try {
+        const { default: Vapi } = await import("@vapi-ai/web");
+        if (!mounted) return;
+
+        const vapi = new Vapi("42e246dc-74d0-4145-9c99-07c17575f930");
+        vapiRef.current = vapi;
+
+        // Store handler references for cleanup
+        const handleCallStart = () => {
+          setIsWebCallConnecting(false);
+          setIsWebCallActive(true);
+        };
+
+        const handleCallEnd = () => {
+          setIsWebCallActive(false);
+          setIsWebCallConnecting(false);
+          setHasVapiAccess(false);
+          setWebCallError(null);
+        };
+
+        const handleError = (error: any) => {
+          console.error("[Vapi] Web call error:", error);
+          setWebCallError(normalizeCallError(error));
+          setIsWebCallActive(false);
+          setIsWebCallConnecting(false);
+        };
+
+        const handleTranscript = (data: any) => {
+          if (!data?.transcript) return;
+          setWebTranscripts((prev) => [
+            ...prev,
+            {
+              role: data.role || "assistant",
+              text: data.transcript,
+              id: Date.now() + Math.random(),
+            },
+          ]);
+
+          // Drive assistant speaking animation
+          const isAssistant = (data.role || "assistant") !== "user";
+          if (isAssistant) {
+            setIsAssistantSpeaking(true);
+            if (assistantSpeakingTimeoutRef.current) {
+              clearTimeout(assistantSpeakingTimeoutRef.current);
+            }
+            assistantSpeakingTimeoutRef.current = setTimeout(() => {
+              setIsAssistantSpeaking(false);
+            }, 900);
+          }
+        };
+
+        // Register event listeners and store references in ref
+        vapi.on("call-start", handleCallStart);
+        vapiEventHandlersRef.current.push({
+          event: "call-start",
+          handler: handleCallStart,
+        });
+
+        vapi.on("call-end", handleCallEnd);
+        vapiEventHandlersRef.current.push({
+          event: "call-end",
+          handler: handleCallEnd,
+        });
+
+        vapi.on("error", handleError);
+        vapiEventHandlersRef.current.push({
+          event: "error",
+          handler: handleError,
+        });
+
+        vapi.on("transcript" as any, handleTranscript);
+        vapiEventHandlersRef.current.push({
+          event: "transcript",
+          handler: handleTranscript,
+        });
+      } catch (err) {
+        console.error("[Vapi] Failed to initialize Web SDK:", err);
+        setWebCallError(
+          "Unable to initialize the call experience. Please try again later."
+        );
+      }
+    }
+
+    void initVapi();
+
+    return () => {
+      mounted = false;
+      try {
+        // Clean up timeout
+        if (assistantSpeakingTimeoutRef.current) {
+          clearTimeout(assistantSpeakingTimeoutRef.current);
+          assistantSpeakingTimeoutRef.current = null;
+        }
+
+        // Remove all event listeners
+        if (vapiRef.current && vapiEventHandlersRef.current.length > 0) {
+          vapiEventHandlersRef.current.forEach(({ event, handler }) => {
+            try {
+              // Try both 'off' and 'removeListener' methods (common event emitter patterns)
+              if (typeof vapiRef.current.off === "function") {
+                vapiRef.current.off(event, handler);
+              } else if (typeof vapiRef.current.removeListener === "function") {
+                vapiRef.current.removeListener(event, handler);
+              }
+            } catch (err) {
+              // Ignore errors when removing listeners
+              console.warn(
+                `[Vapi] Failed to remove listener for ${event}:`,
+                err
+              );
+            }
+          });
+
+          // Clear the handlers array
+          vapiEventHandlersRef.current = [];
+
+          // Stop the call if active
+          vapiRef.current.stop?.();
+        }
+      } catch {
+        // ignore cleanup errors
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -309,7 +531,12 @@ export default function Home() {
     setCallError(null);
     setCallSuccess(false);
 
-    const submittedText = [callMeForm.name, callMeForm.email, callMeForm.phone]
+    const submittedText = [
+      callMeForm.name,
+      callMeForm.email,
+      callMeForm.phone,
+      callMeForm.assistantId,
+    ]
       .filter(Boolean)
       .join(" ");
     if (containsUnsafeLanguage(submittedText)) {
@@ -326,6 +553,8 @@ export default function Home() {
     setIsSubmittingCall(true);
     setIsCallConnecting(true);
 
+    const assistantId = callMeForm.assistantId.trim();
+
     try {
       const response = await fetch("/api/create-call", {
         method: "POST",
@@ -336,6 +565,7 @@ export default function Home() {
           name: callMeForm.name,
           email: callMeForm.email,
           phone: callMeForm.phone,
+          ...(assistantId ? { assistantId } : {}),
         }),
       });
 
@@ -392,7 +622,13 @@ export default function Home() {
 
       setTimeout(() => {
         setIsCallActive(false);
-        setCallMeForm({ name: "", email: "", phone: "", newsletter: true });
+        setCallMeForm({
+          name: "",
+          email: "",
+          phone: "",
+          assistantId: "",
+          newsletter: true,
+        });
         setCallSuccess(false);
       }, 30000); // 30 seconds
     } catch (error) {
@@ -405,6 +641,90 @@ export default function Home() {
       setIsCallActive(false);
     } finally {
       setIsSubmittingCall(false);
+    }
+  };
+
+  const handleVapiPrefillSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vapiUserInfo.name || !vapiUserInfo.email || !vapiUserInfo.phone) {
+      return;
+    }
+
+    setWebCallError(null);
+    setIsWebCallConnecting(true);
+
+    setHasVapiAccess(true);
+    setShowVapiPrefill(false);
+
+    // Fire Slack webhook similar to old call flow
+    const emailDomain = vapiUserInfo.email.split("@")[1] || "unknown";
+    let phoneCountryCode = "+1";
+    const cleanedPhone = vapiUserInfo.phone.replace(/[^\d+]/g, "");
+    if (cleanedPhone.startsWith("+")) {
+      const match = cleanedPhone.match(/^\+(\d{1,3})/);
+      if (match) {
+        phoneCountryCode = `+${match[1]}`;
+      }
+    } else if (cleanedPhone.startsWith("1") && cleanedPhone.length >= 11) {
+      phoneCountryCode = "+1";
+    }
+
+    const firstName = vapiUserInfo.name.trim().split(" ")[0] || "";
+
+    fetch("/api/notify-slack", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        call_id: `vapi-prefill-${Date.now()}`,
+        name: vapiUserInfo.name,
+        email: vapiUserInfo.email,
+        phone: vapiUserInfo.phone,
+        email_domain: emailDomain,
+        phone_country_code: phoneCountryCode,
+        first_name: firstName,
+      }),
+    }).catch((error) => {
+      console.error(
+        "Failed to send Slack notification for Vapi prefill:",
+        error
+      );
+    });
+
+    // Start web call via Vapi Web SDK with assistant overrides
+    try {
+      if (!vapiRef.current) {
+        console.error(
+          "[Vapi] Web SDK instance not available when starting call"
+        );
+        setWebCallError(normalizeCallError({ message: "SDK not available" }));
+        setIsWebCallConnecting(false);
+        setIsWebCallActive(false);
+        setHasVapiAccess(false);
+        return;
+      }
+
+      vapiRef.current
+        .start("1baa4c19-196c-4c3f-ba9e-821035d17853", {
+          variableValues: {
+            first_name: firstName,
+            email_address: vapiUserInfo.email,
+          },
+        })
+        .catch((error: any) => {
+          console.error("[Vapi] Error starting web call:", error);
+          setWebCallError(normalizeCallError(error));
+          setIsWebCallConnecting(false);
+          setIsWebCallActive(false);
+          setHasVapiAccess(false);
+        });
+    } catch (error: any) {
+      console.error("[Vapi] Error starting web call:", error);
+      setWebCallError(normalizeCallError(error));
+      setIsWebCallConnecting(false);
+      setIsWebCallActive(false);
+      setHasVapiAccess(false);
     }
   };
 
@@ -739,10 +1059,11 @@ export default function Home() {
             <button
               onClick={() => {
                 trackClick("button", "Speak to Movo", "hero", {
-                  action: "open_call_modal",
+                  action: "open_vapi_prefill",
                   cta_type: "primary",
+                  source: "hero_button",
                 });
-                setShowCallMe(true);
+                setShowVapiPrefill(true);
               }}
               className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-[#D97948] hover:bg-[#C96838] text-white text-sm sm:text-base font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto cursor-pointer min-h-[48px]"
             >
@@ -796,59 +1117,136 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <button
-        onClick={() => {
-          if (isCallActive) {
-            setIsCallActive(false);
-            setShowCallMe(false);
-            setCallMeForm({ name: "", email: "", phone: "", newsletter: true });
-            trackClick("button", "End Call", "floating_cta", {
-              button_type: "floating",
-              action: "end_call",
-            });
-          } else {
-            trackClick("button", "Talk to Movo", "floating_cta", {
-              button_type: "floating",
-              action: "open_call_modal",
-            });
-            setShowCallMe(true);
-          }
-        }}
-        className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl transition-all duration-300 hover:scale-105 group cursor-pointer ${
-          isCallActive
-            ? "bg-white text-gray-900 border-4 border-blue-500"
-            : isCallConnecting
-            ? "bg-white text-gray-900 border-4 border-blue-500 animate-pulse"
-            : "bg-white text-gray-900 hover:shadow-3xl"
-        }`}
-      >
-        <div
-          className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
-            isCallActive
-              ? "bg-gradient-to-br from-red-400 to-red-600"
-              : "bg-gradient-to-br from-green-400 to-green-600"
+      {/* Minimal pre-call entrypoint for the Vapi widget */}
+      {/* Floating call button - shows different states */}
+      {(hasVapiAccess ||
+        isWebCallConnecting ||
+        isWebCallActive ||
+        webCallError) && (
+        <button
+          onClick={() => {
+            if (isWebCallActive) {
+              // End call
+              try {
+                vapiRef.current?.stop?.();
+              } catch {
+                // ignore
+              }
+              setIsWebCallActive(false);
+              setIsWebCallConnecting(false);
+              setHasVapiAccess(false);
+              setWebCallError(null);
+            } else if (isWebCallConnecting) {
+              // Cancel connecting
+              try {
+                vapiRef.current?.stop?.();
+              } catch {
+                // ignore
+              }
+              setIsWebCallConnecting(false);
+              setIsWebCallActive(false);
+              setHasVapiAccess(false);
+              setWebCallError(null);
+            } else if (webCallError) {
+              // Retry - open prefill form again
+              setWebCallError(null);
+              setHasVapiAccess(false);
+              setShowVapiPrefill(true);
+            }
+          }}
+          className={`fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-5 py-3 text-sm shadow-lg backdrop-blur-sm transition-colors cursor-pointer ${
+            webCallError && !isWebCallActive
+              ? "bg-rose-500/90 hover:bg-rose-600 text-white"
+              : isWebCallActive
+              ? "bg-rose-500/90 hover:bg-rose-600 text-white"
+              : "bg-black/80 hover:bg-black text-white"
           }`}
         >
-          <Phone
-            className={`w-4 h-4 sm:w-5 sm:h-5 text-white ${
-              isCallActive ? "animate-pulse" : ""
-            }`}
-          />
-          {!isCallActive && !isCallConnecting && (
-            <div className="absolute inset-0 rounded-lg bg-green-500 animate-ping opacity-40"></div>
-          )}
-          {isCallConnecting && (
-            <div className="absolute inset-0 rounded-lg border-2 border-blue-500 animate-spin"></div>
-          )}
-        </div>
-        <span className="text-sm sm:text-base font-semibold">
-          {isCallActive
-            ? "End call"
-            : isCallConnecting
-            ? "Connecting..."
-            : "Talk to Movo"}
-        </span>
-      </button>
+          {isWebCallActive ? (
+            <>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-semibold">
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </span>
+              <span className="font-medium">End call</span>
+            </>
+          ) : isWebCallConnecting ? (
+            <>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-semibold">
+                <svg
+                  className="w-3 h-3 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              </span>
+              <span className="font-medium">Connecting...</span>
+            </>
+          ) : webCallError ? (
+            <>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-semibold">
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </span>
+              <span className="font-medium">Retry</span>
+            </>
+          ) : null}
+        </button>
+      )}
+      {!hasVapiAccess &&
+        !isWebCallConnecting &&
+        !isWebCallActive &&
+        !webCallError && (
+          <button
+            onClick={() => {
+              trackClick("button", "Open Vapi Prefill", "vapi_prefill", {
+                source: "floating_pill",
+              });
+              setShowVapiPrefill(true);
+            }}
+            className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-black/80 text-white px-5 py-3 text-sm shadow-lg backdrop-blur-sm hover:bg-black transition-colors cursor-pointer"
+          >
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold">
+              ✦
+            </span>
+            <span className="font-medium">Talk to Movo</span>
+          </button>
+        )}
       <section id="product" className="min-h-screen flex items-center">
         <div className="w-full grid lg:grid-cols-2">
           {/* Left side - White background with content */}
@@ -877,8 +1275,6 @@ export default function Home() {
                 your best rep.
               </p>
 
-              
-              
               <audio
                 ref={learnVideoRef}
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Nadav%20Vieder%20Video%20Nov%2011%202025-j07YSAJHlsf8TfJYGARpfwPwkjIzUn.mp3"
@@ -1050,7 +1446,7 @@ export default function Home() {
                       <h4 className="text-xs sm:text-sm font-bold text-gray-900 mb-1.5 sm:mb-2">
                         Recent Conversations
                       </h4>
-                      <div className="bg-gray-50 rounded-lg p-2 sm:p-2.5 space-y-1.5 sm:space-2">
+                      <div className="bg-gray-50 rounded-lg p-2 sm:p-2.5 space-y-1.5 sm:space-y-2">
                         <div className="text-[10px] sm:text-xs text-gray-700">
                           <p>Hi Jessica! Yes, we have two options:</p>
                         </div>
@@ -1144,7 +1540,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 md:p-6 relative overflow-hidden">
                     {/* Live stat badge */}
-                    
+
                     <div className="flex items-center justify-center mb-3 md:mb-4 mt-8 md:mt-6">
                       <div className="w-16 md:w-20 h-16 md:h-20 bg-gray-900 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <Phone className="w-8 md:w-10 h-8 md:h-10 text-white" />
@@ -1175,7 +1571,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 md:p-6 space-y-4 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm mt-8 md:mt-6">
                       <div className="text-[10px] md:text-xs text-gray-500 mb-1.5 md:mb-2">
                         Text from Movo:
@@ -1231,7 +1627,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm mt-8 md:mt-6">
                       <div className="flex items-center justify-between mb-2 md:mb-3">
                         <div className="text-sm md:text-base font-semibold text-gray-900">
@@ -1276,7 +1672,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm mt-8 md:mt-6">
                       <div className="text-[10px] md:text-xs font-semibold text-gray-500 mb-1.5 md:mb-2">
                         Top Converting Offer
@@ -1322,7 +1718,7 @@ export default function Home() {
                 <div className="mb-6">
                   <div className="w-full bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 md:p-6 relative">
                     {/* Live stat badge */}
-                    
+
                     <div className="grid grid-cols-3 gap-2 md:gap-3 mt-8 md:mt-6">
                       <div className="bg-white p-2 md:p-3 rounded-lg shadow-sm text-center group-hover:scale-105 transition-transform">
                         <div className="text-xl md:text-2xl mb-0.5 md:mb-1">
@@ -1407,8 +1803,6 @@ export default function Home() {
                 with no extra staff or marketing spend.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                
-                {/* </CHANGE> */}
                 <a
                   href="https://calendly.com/ari-movoai/30min"
                   target="_blank"
@@ -1479,10 +1873,11 @@ export default function Home() {
             <button
               onClick={() => {
                 trackClick("button", "Call Me", "final_cta", {
-                  action: "open_call_modal",
+                  action: "open_vapi_prefill",
                   cta_type: "primary",
+                  source: "final_cta",
                 });
-                setShowCallMe(true);
+                setShowVapiPrefill(true);
               }}
               className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white text-lg font-medium rounded-sm transition-all duration-300 hover:shadow-2xl hover:scale-105 cursor-pointer min-h-[56px]"
             >
@@ -1726,6 +2121,29 @@ export default function Home() {
                 />
               </div>
 
+              <div>
+                <label
+                  htmlFor="assistantId"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Assistant ID (optional)
+                </label>
+                <input
+                  id="assistantId"
+                  type="text"
+                  placeholder="Leave blank to use the default assistant"
+                  value={callMeForm.assistantId}
+                  onChange={(e) =>
+                    setCallMeForm({
+                      ...callMeForm,
+                      assistantId: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmittingCall}
+                />
+              </div>
+
               <div className="flex items-start gap-3 pt-2">
                 <input
                   id="newsletter"
@@ -1877,6 +2295,151 @@ export default function Home() {
                 />
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* Vapi pre-call form modal */}
+      {showVapiPrefill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl">
+            <button
+              onClick={() => setShowVapiPrefill(false)}
+              className="absolute right-5 top-5 text-gray-400 hover:text-gray-700"
+            >
+              ✕
+            </button>
+            <div className="mb-6 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+                Before you start
+              </p>
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Share a few details
+              </h2>
+              <p className="text-sm text-gray-500">
+                We&apos;ll use this so Movo can personalize the conversation.
+              </p>
+            </div>
+            <form onSubmit={handleVapiPrefillSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="vapi-name"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500"
+                >
+                  Name
+                </label>
+                <input
+                  id="vapi-name"
+                  type="text"
+                  value={vapiUserInfo.name}
+                  onChange={(e) =>
+                    setVapiUserInfo({ ...vapiUserInfo, name: e.target.value })
+                  }
+                  placeholder="Alex Johnson"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/5"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="vapi-email"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500"
+                >
+                  Email
+                </label>
+                <input
+                  id="vapi-email"
+                  type="email"
+                  value={vapiUserInfo.email}
+                  onChange={(e) =>
+                    setVapiUserInfo({ ...vapiUserInfo, email: e.target.value })
+                  }
+                  placeholder="you@academy.com"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/5"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="vapi-phone"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500"
+                >
+                  Phone
+                </label>
+                <input
+                  id="vapi-phone"
+                  type="tel"
+                  value={vapiUserInfo.phone}
+                  onChange={(e) =>
+                    setVapiUserInfo({ ...vapiUserInfo, phone: e.target.value })
+                  }
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/5"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-lg shadow-black/10 transition hover:bg-black/90"
+              >
+                Continue to call
+              </button>
+              <p className="text-xs text-gray-400">
+                By continuing you consent to being contacted about Movo AI and
+                agree to our{" "}
+                <a
+                  href="/privacy"
+                  className="underline decoration-gray-300 underline-offset-4 hover:text-gray-600"
+                >
+                  Privacy Policy
+                </a>
+                .
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Error notification toast */}
+      {webCallError && !isWebCallActive && !isWebCallConnecting && (
+        <div className="fixed bottom-24 right-6 z-50 max-w-sm rounded-lg bg-rose-500/90 text-white px-4 py-3 text-sm shadow-lg backdrop-blur-sm border border-rose-400/20">
+          <div className="flex items-start gap-3">
+            <svg
+              className="w-5 h-5 flex-shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div className="flex-1">
+              <p className="font-medium mb-1">Call Failed</p>
+              <p className="text-white/90 text-xs">{webCallError}</p>
+            </div>
+            <button
+              onClick={() => {
+                setWebCallError(null);
+                setHasVapiAccess(false);
+              }}
+              className="text-white/80 hover:text-white transition"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       )}
