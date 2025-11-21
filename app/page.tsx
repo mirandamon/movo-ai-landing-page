@@ -37,6 +37,7 @@ export default function Home() {
   const vapiEventHandlersRef = useRef<
     { event: string; handler: (...args: any[]) => void }[]
   >([]);
+  const vapiCallInfoRef = useRef<{ email: string; name: string } | null>(null); // Store email and name for the current pending call
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const assistantSpeakingTimeoutRef = useRef<ReturnType<
     typeof setTimeout
@@ -222,6 +223,37 @@ export default function Home() {
         const handleCallStart = () => {
           setIsWebCallConnecting(false);
           setIsWebCallActive(true);
+
+          // Send email API call in the background when call is successfully connected
+          const callInfo = vapiCallInfoRef.current;
+          if (callInfo) {
+            // Extract first name from full name
+            const firstName = callInfo.name.trim().split(" ")[0] || "";
+            // Clear the ref immediately to prevent reuse
+            vapiCallInfoRef.current = null;
+            // Fire and forget - don't block execution
+            fetch(
+              "https://acuity-stub.vercel.app/api/v1/emails/send-template",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  from: "ari@movoai.co",
+                  fromName: "Ari Posner",
+                  templateId: "d-7637fbd58f1e4463a93cc96ced411788",
+                  cc: "ari@movoai.co",
+                  to: callInfo.email,
+                  dynamicTemplateData: {
+                    first_name: firstName,
+                  },
+                }),
+              }
+            ).catch((error) => {
+              console.error("[Email API] Failed to send email:", error);
+            });
+          }
         };
 
         const handleCallEnd = () => {
@@ -229,6 +261,8 @@ export default function Home() {
           setIsWebCallConnecting(false);
           setHasVapiAccess(false);
           setWebCallError(null);
+          // Clear call info ref if call ends (info was already consumed by handleCallStart if call connected)
+          vapiCallInfoRef.current = null;
         };
 
         const handleError = (error: any) => {
@@ -236,6 +270,10 @@ export default function Home() {
           setWebCallError(normalizeCallError(error));
           setIsWebCallActive(false);
           setIsWebCallConnecting(false);
+          // Note: Do not remove email from queue here to avoid double-removal
+          // - If call fails before connecting, promise rejection handlers (.catch/catch) will remove it
+          // - If call errors after connecting, handleCallStart already consumed the email
+          // Removing here would cause double-removal when vapi.start() rejects AND emits error event
         };
 
         const handleTranscript = (data: any) => {
@@ -656,8 +694,19 @@ export default function Home() {
       return;
     }
 
+    // Prevent multiple simultaneous calls
+    if (isWebCallConnecting || isWebCallActive) {
+      return;
+    }
+
     setWebCallError(null);
     setIsWebCallConnecting(true);
+
+    // Store email and name for use in call-start event handler
+    vapiCallInfoRef.current = {
+      email: vapiUserInfo.email,
+      name: vapiUserInfo.name,
+    };
 
     setHasVapiAccess(true);
     setShowVapiPrefill(false);
@@ -725,6 +774,8 @@ export default function Home() {
           setIsWebCallConnecting(false);
           setIsWebCallActive(false);
           setHasVapiAccess(false);
+          // Clear call info ref since call failed
+          vapiCallInfoRef.current = null;
         });
     } catch (error: any) {
       console.error("[Vapi] Error starting web call:", error);
@@ -732,6 +783,8 @@ export default function Home() {
       setIsWebCallConnecting(false);
       setIsWebCallActive(false);
       setHasVapiAccess(false);
+      // Clear call info ref since call failed
+      vapiCallInfoRef.current = null;
     }
   };
 
