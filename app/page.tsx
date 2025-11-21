@@ -37,7 +37,7 @@ export default function Home() {
   const vapiEventHandlersRef = useRef<
     { event: string; handler: (...args: any[]) => void }[]
   >([]);
-  const vapiEmailQueueRef = useRef<string[]>([]); // Queue to store emails for pending calls (FIFO)
+  const vapiCallInfoRef = useRef<{ email: string; name: string } | null>(null); // Store email and name for the current pending call
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const assistantSpeakingTimeoutRef = useRef<ReturnType<
     typeof setTimeout
@@ -225,10 +225,12 @@ export default function Home() {
           setIsWebCallActive(true);
 
           // Send email API call in the background when call is successfully connected
-          // Use FIFO queue to ensure each call-start gets the email from the call that initiated it
-          // This prevents race conditions when multiple calls are initiated quickly
-          const email = vapiEmailQueueRef.current.shift(); // Remove and get first email from queue
-          if (email) {
+          const callInfo = vapiCallInfoRef.current;
+          if (callInfo) {
+            // Extract first name from full name
+            const firstName = callInfo.name.trim().split(" ")[0] || "";
+            // Clear the ref immediately to prevent reuse
+            vapiCallInfoRef.current = null;
             // Fire and forget - don't block execution
             fetch(
               "https://acuity-stub.vercel.app/api/v1/emails/send-template",
@@ -240,9 +242,12 @@ export default function Home() {
                 body: JSON.stringify({
                   from: "ari@movoai.co",
                   fromName: "Ari Posner",
-                  templateID: "d-7637fbd58f1e4463a93cc96ced411788",
+                  templateId: "d-7637fbd58f1e4463a93cc96ced411788",
                   cc: "ari@movoai.co",
-                  to: email,
+                  to: callInfo.email,
+                  dynamicTemplateData: {
+                    first_name: firstName,
+                  },
                 }),
               }
             ).catch((error) => {
@@ -256,9 +261,8 @@ export default function Home() {
           setIsWebCallConnecting(false);
           setHasVapiAccess(false);
           setWebCallError(null);
-          // Note: Email queue is managed per-call, so no need to clear here
-          // If call ends before connecting, the email will remain in queue but won't be used
-          // since handleCallStart only fires when call successfully connects
+          // Clear call info ref if call ends (info was already consumed by handleCallStart if call connected)
+          vapiCallInfoRef.current = null;
         };
 
         const handleError = (error: any) => {
@@ -266,10 +270,10 @@ export default function Home() {
           setWebCallError(normalizeCallError(error));
           setIsWebCallActive(false);
           setIsWebCallConnecting(false);
-          // If call errors before connecting, remove the corresponding email from queue
-          // to prevent it from being used by a future call-start event
-          // Use shift() to remove the first item (FIFO order)
-          vapiEmailQueueRef.current.shift();
+          // Note: Do not remove email from queue here to avoid double-removal
+          // - If call fails before connecting, promise rejection handlers (.catch/catch) will remove it
+          // - If call errors after connecting, handleCallStart already consumed the email
+          // Removing here would cause double-removal when vapi.start() rejects AND emits error event
         };
 
         const handleTranscript = (data: any) => {
@@ -690,13 +694,19 @@ export default function Home() {
       return;
     }
 
+    // Prevent multiple simultaneous calls
+    if (isWebCallConnecting || isWebCallActive) {
+      return;
+    }
+
     setWebCallError(null);
     setIsWebCallConnecting(true);
 
-    // Add email to queue for use in call-start event handler
-    // Using a queue ensures FIFO ordering, so each call-start gets the correct email
-    // even if multiple calls are initiated before any connect
-    vapiEmailQueueRef.current.push(vapiUserInfo.email);
+    // Store email and name for use in call-start event handler
+    vapiCallInfoRef.current = {
+      email: vapiUserInfo.email,
+      name: vapiUserInfo.name,
+    };
 
     setHasVapiAccess(true);
     setShowVapiPrefill(false);
@@ -764,9 +774,8 @@ export default function Home() {
           setIsWebCallConnecting(false);
           setIsWebCallActive(false);
           setHasVapiAccess(false);
-          // Remove email from queue since call failed synchronously
-          // This prevents the email from being used by a future call-start event
-          vapiEmailQueueRef.current.shift();
+          // Clear call info ref since call failed
+          vapiCallInfoRef.current = null;
         });
     } catch (error: any) {
       console.error("[Vapi] Error starting web call:", error);
@@ -774,9 +783,8 @@ export default function Home() {
       setIsWebCallConnecting(false);
       setIsWebCallActive(false);
       setHasVapiAccess(false);
-      // Remove email from queue since call failed synchronously
-      // This prevents the email from being used by a future call-start event
-      vapiEmailQueueRef.current.shift();
+      // Clear call info ref since call failed
+      vapiCallInfoRef.current = null;
     }
   };
 
