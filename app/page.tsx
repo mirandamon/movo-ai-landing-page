@@ -2235,7 +2235,7 @@ export default function Home() {
                   required
                 />
                 <label htmlFor="vapi-consent" className="text-xs text-gray-500 leading-relaxed">
-                  I agree to receive automated SMS messages from Movo AI related to my inquiry or reservation. Message
+                  I agree to receive automated robocall and SMS messages from Movo AI related to my inquiry or reservation. Message
                   and data rates may apply. Frequency varies. Reply STOP to opt out or HELP for help. Consent is not a
                   condition of purchase. You also agree to our{" "}
                   <a
