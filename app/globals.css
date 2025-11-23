@@ -157,6 +157,12 @@
     @apply text-foreground bg-background;
     /* Removed black background that was causing the black bar */
   }
+  /* Added overflow prevention for html and body */
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
 }
 
 @layer utilities {

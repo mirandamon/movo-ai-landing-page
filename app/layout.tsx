@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist } from 'next/font/google'
-import { Playfair_Display, Caveat } from 'next/font/google'
+import { Geist } from "next/font/google"
+import { Playfair_Display, Caveat } from "next/font/google"
 import Script from "next/script"
 import { Suspense } from "react"
 import { PostHogProvider } from "@/components/posthog-provider"
@@ -67,7 +67,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="overflow-x-hidden">
       <head>
         {process.env.NODE_ENV === "production" && (
           <Script
@@ -77,11 +77,11 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className={`${geistSans.variable} ${playfair.variable} ${caveat.variable} font-sans`}>
+      <body
+        className={`${geistSans.variable} ${playfair.variable} ${caveat.variable} font-sans overflow-x-hidden max-w-full`}
+      >
         <Suspense fallback={null}>
-          <PostHogProvider>
-            {children}
-          </PostHogProvider>
+          <PostHogProvider>{children}</PostHogProvider>
         </Suspense>
       </body>
     </html>
