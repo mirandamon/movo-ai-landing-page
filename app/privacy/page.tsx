@@ -310,6 +310,15 @@ export default function PrivacyPage() {
               If Movo is acquired, merged, or undergoes financing, Personal Information may be transferred under
               confidentiality obligations.
             </p>
+
+            <h4 className="text-base font-bold text-gray-900 mb-2 mt-6">5.4. Mobile Numbers and SMS Consent</h4>
+            <p>
+              We only use mobile numbers and SMS consent information to deliver service-related communications requested
+              by the user. We do not sell, share, or disclose mobile numbers, SMS consent data, or message-related
+              personal information with third parties, partners, or affiliates for marketing or promotional purposes.
+              Any sharing with service providers is strictly for operating our platform under confidentiality
+              obligations.
+            </p>
           </div>
         </section>
 
@@ -405,7 +414,6 @@ export default function PrivacyPage() {
             <p>Movo AI, Inc.</p>
           </div>
         </section>
-        {/* </CHANGE> */}
       </div>
     </div>
   )
