@@ -1136,7 +1136,7 @@ export default function Home() {
               Trusted by leading sports academies
             </p>
             <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16">
-              {["Supreme Hoops", "MPAC Sports", "Haifa Swim", "Pro Soccer Academy", "Champion Tennis"].map(
+              {["Elite Baseball Academy", "MPAC Sports", "Haifa Swim", "Supreme Hoops", "Champion Tennis"].map(
                 (name, i) => (
                   <span
                     key={i}
