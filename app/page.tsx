@@ -1276,7 +1276,7 @@ export default function Home() {
                 className="inline-flex items-center gap-3 bg-gray-900 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors"
               >
                 {isLearnVideoPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                See Movo learn in action
+                Hear Movo in action
               </button>
 
               {/* Numbered features */}
@@ -2235,9 +2235,9 @@ export default function Home() {
                   required
                 />
                 <label htmlFor="vapi-consent" className="text-xs text-gray-500 leading-relaxed">
-                  I agree to receive automated robocall and SMS messages from Movo AI related to my inquiry or reservation. Message
-                  and data rates may apply. Frequency varies. Reply STOP to opt out or HELP for help. Consent is not a
-                  condition of purchase. You also agree to our{" "}
+                  I agree to receive automated robocall and SMS messages from Movo AI related to my inquiry or
+                  reservation. Message and data rates may apply. Frequency varies. Reply STOP to opt out or HELP for
+                  help. Consent is not a condition of purchase. You also agree to our{" "}
                   <a
                     href="https://www.movoai.co/privacy"
                     target="_blank"
