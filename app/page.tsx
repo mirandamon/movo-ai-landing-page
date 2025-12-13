@@ -1873,8 +1873,9 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex justify-center mt-8">
-            <img src="/images/soc2-badge.svg" alt="SOC2 Type 1 Certified by Delve" className="h-20 w-auto" />
+          <div className="flex justify-center items-center gap-6 mt-8">
+            
+            <img src="/images/aicpa-soc-badge.png" alt="AICPA SOC Certified" className="h-20 w-auto" />
           </div>
 
           <div className="text-center pt-8 border-t border-gray-200">
